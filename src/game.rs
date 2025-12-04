@@ -233,7 +233,7 @@ impl Game {
         let time_taken = TIME_LIMIT - self.time_remaining;
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_default()
             .as_secs();
         
         let save_data = SaveData {
@@ -365,45 +365,31 @@ impl Game {
         }
         
         // Ajustar posições dos inimigos para ficarem sobre plataformas
+        // Lógica simplificada: encontrar a plataforma mais alta abaixo do inimigo
         for enemy in &mut enemies {
             let enemy_center_x = enemy.x + enemy.width / 2.0;
-            let mut platform_y = GROUND_Y; // Chão padrão
-            let mut found = false;
+            let mut best_platform_y = GROUND_Y; // Chão padrão
+            let mut found_platform = false;
             
-            // Procurar a plataforma que está na mesma posição X do inimigo
+            // Uma única passagem: encontrar a plataforma mais alta que suporta o inimigo
             for platform in &platforms {
                 // Verificar se o centro do inimigo está sobre esta plataforma (horizontalmente)
                 if enemy_center_x >= platform.x 
                     && enemy_center_x <= platform.x + platform.width
+                    && platform.y <= best_platform_y // Plataforma mais alta (menor Y)
                 {
-                    // Encontrar a plataforma mais próxima (menor Y = mais alta)
-                    // que está na posição X do inimigo
-                    if !found || platform.y < platform_y {
-                        platform_y = platform.y;
-                        found = true;
-                    }
+                    best_platform_y = platform.y;
+                    found_platform = true;
                 }
             }
             
-            // Ajustar Y para ficar em cima da plataforma encontrada ou no chão
-            enemy.y = platform_y - enemy.height;
+            // Posicionar inimigo em cima da plataforma encontrada ou no chão
+            enemy.y = best_platform_y - enemy.height;
             enemy.on_ground = true;
             
-            // Verificar imediatamente se está realmente sobre uma plataforma
-            // Se não estiver, ajustar para o chão
-            let mut is_on_platform = false;
-            for platform in &platforms {
-                if enemy.x + enemy.width / 2.0 >= platform.x 
-                    && enemy.x + enemy.width / 2.0 <= platform.x + platform.width
-                    && (enemy.y + enemy.height - platform.y).abs() < 2.0
-                {
-                    is_on_platform = true;
-                    break;
-                }
-            }
-            
-            // Se não está sobre plataforma, colocar no chão
-            if !is_on_platform && !found {
+            // Validação final: garantir que está realmente sobre uma plataforma ou no chão
+            // Se não encontrou plataforma, garantir que está no chão
+            if !found_platform {
                 enemy.y = GROUND_Y - enemy.height;
             }
         }
@@ -496,7 +482,132 @@ impl Game {
         self.camera = Camera::new();
     }
 
+    // ============================================================================
+    // HELPERS: Funções auxiliares para otimização e redução de duplicação
+    // ============================================================================
+
+    /// Helper: Verifica se dois retângulos estão próximos o suficiente para colisão
+    #[inline]
+    fn is_nearby_for_collision(
+        x1: f32, y1: f32, w1: f32, h1: f32,
+        x2: f32, y2: f32, w2: f32, h2: f32,
+        margin: f32
+    ) -> bool {
+        x2 + w2 >= x1 - margin
+            && x2 <= x1 + w1 + margin
+            && y2 + h2 >= y1 - margin
+            && y2 <= y1 + h1 + margin
+    }
+
+    /// Helper: Processa colisões entre player e plataformas
+    fn check_player_platform_collisions(
+        player: &mut Player,
+        platforms: &[Platform],
+        player_rect: (f32, f32, f32, f32)
+    ) {
+        let (px, py, pw, ph) = player_rect;
+        for platform in platforms {
+            if Self::is_nearby_for_collision(
+                px, py, pw, ph,
+                platform.x, platform.y, platform.width, platform.height,
+                COLLISION_MARGIN
+            ) {
+                player.check_platform_collision(platform);
+            }
+        }
+    }
+
+    /// Helper: Processa colisões entre inimigo e plataformas
+    fn check_enemy_platform_collisions(
+        enemy: &mut Enemy,
+        platforms: &[Platform]
+    ) {
+        for platform in platforms {
+            if Self::is_nearby_for_collision(
+                enemy.x, enemy.y, enemy.width, enemy.height,
+                platform.x, platform.y, platform.width, platform.height,
+                COLLISION_MARGIN
+            ) {
+                enemy.check_platform_collision(platform);
+            }
+        }
+    }
+
+    /// Helper: Calcula pontos no modo versus baseado em streak
+    fn calculate_versus_points(streak: u32) -> u32 {
+        if streak > 0 {
+            200 * (1 << (streak - 1))
+        } else {
+            200
+        }
+    }
+
+    /// Helper: Verifica se player está sobre uma plataforma
+    fn is_player_on_platform(
+        player_x: f32,
+        player_y: f32,
+        player_w: f32,
+        platforms: &[Platform]
+    ) -> Option<f32> {
+        let player_center_x = player_x + player_w / 2.0;
+        for platform in platforms {
+            if player_center_x >= platform.x 
+                && player_center_x <= platform.x + platform.width
+                && (player_y + PLAYER_HEIGHT - platform.y).abs() < 5.0
+            {
+                return Some(platform.y);
+            }
+        }
+        None
+    }
+
+    /// Helper: Garante que player está no chão ou sobre plataforma
+    fn ensure_player_grounded(player: &mut Player, platforms: &[Platform]) {
+        if player.on_ground && player.vel_y == 0.0 {
+            let (px, py, pw, _ph) = player.get_rect();
+            if let Some(platform_y) = Self::is_player_on_platform(px, py, pw, platforms) {
+                // Está sobre plataforma - garantir que está exatamente em cima
+                player.y = platform_y - PLAYER_HEIGHT;
+            } else {
+                // Não está sobre plataforma - colocar no chão
+                player.y = GROUND_Y - PLAYER_HEIGHT;
+            }
+        }
+    }
+
+    /// Helper: Atualiza um player no modo versus
+    /// Retorna true se o player pulou
+    fn update_versus_player_physics(
+        player: &mut Player,
+        left: bool,
+        right: bool,
+        jump: bool,
+        platforms: &[Platform],
+        dt: f32,
+    ) -> bool {
+        // Movimento
+        player.handle_movement_custom(left, right);
+        player.update(dt);
+        
+        // Colisões com plataformas
+        let (px, py, pw, ph) = player.get_rect();
+        Self::check_player_platform_collisions(player, platforms, (px, py, pw, ph));
+        
+        // Garantir que está no chão ou sobre plataforma
+        Self::ensure_player_grounded(player, platforms);
+        
+        // Atualizar animação
+        player.update_animation(dt);
+        
+        // Pulo
+        player.handle_jump_custom(jump)
+    }
+
     pub fn update(&mut self, dt: f32) {
+        // ========================================================================
+        // ATUALIZAÇÃO GERAL: Transições e verificações globais
+        // ========================================================================
+        
         // Atualizar sistema de transições
         self.update_transition(dt);
         
@@ -510,6 +621,10 @@ impl Game {
         } else {
             self.save_check_timer = 0.0;
         }
+        
+        // ========================================================================
+        // MÁQUINA DE ESTADOS: Processar lógica específica de cada estado
+        // ========================================================================
         
         match self.state {
             GameState::Menu => {
@@ -877,6 +992,7 @@ impl Game {
                 }
             }
             GameState::Playing => {
+                // --- Controles e UI ---
                 // Verificar se quer pausar (P)
                 if is_key_pressed(KeyCode::P) {
                     self.state = GameState::Pause;
@@ -892,6 +1008,7 @@ impl Game {
                     return;
                 }
                 
+                // --- Transições e Timers ---
                 // Atualizar fadein ao iniciar fase
                 if self.level_start_fade_timer > 0.0 {
                     self.level_start_fade_timer -= dt;
@@ -908,6 +1025,7 @@ impl Game {
                     return; // Sair do update para não processar mais nada
                 }
                 
+                // --- Física do Jogador ---
                 // Processar movimento horizontal primeiro
                 self.player.handle_movement();
                 
@@ -917,6 +1035,7 @@ impl Game {
                 // Cache do retângulo do jogador (evitar múltiplas chamadas)
                 let (px, py, pw, ph) = self.player.get_rect();
                 
+                // --- Interações do Jogador ---
                 // Verificar checkpoints
                 for checkpoint in &mut self.checkpoints {
                     if checkpoint.check_activation(px, py, pw, ph) {
@@ -928,16 +1047,7 @@ impl Game {
                 }
                 
                 // Verificar colisões jogador-plataforma (ANTES do pulo para garantir on_ground correto)
-                for platform in &self.platforms {
-                    // Verificar apenas se a plataforma está na tela ou próxima do jogador
-                    if platform.x + platform.width >= px - COLLISION_MARGIN 
-                        && platform.x <= px + pw + COLLISION_MARGIN
-                        && platform.y + platform.height >= py - COLLISION_MARGIN
-                        && platform.y <= py + ph + COLLISION_MARGIN
-                    {
-                        self.player.check_platform_collision(platform);
-                    }
-                }
+                Self::check_player_platform_collisions(&mut self.player, &self.platforms, (px, py, pw, ph));
                 
                 // Processar pulo DEPOIS das colisões (para usar on_ground atualizado)
                 let jumped = self.player.handle_jump();
@@ -964,6 +1074,7 @@ impl Game {
                     self.footstep_timer = 0.0;
                 }
                 
+                // --- Limites do Mundo ---
                 // Verificar colisão com paredes invisíveis (bordas laterais do mundo)
                 let player_left = self.player.x;
                 let player_right = self.player.x + self.player.width;
@@ -997,7 +1108,7 @@ impl Game {
                     }
                 }
                 
-                // Atualizar inimigos
+                // --- Atualização de Inimigos ---
                 for enemy in &mut self.enemies {
                     if !enemy.alive {
                         continue; // Pular inimigos mortos
@@ -1006,16 +1117,7 @@ impl Game {
                     enemy.update(dt);
                     
                     // Colisão inimigo-plataforma
-                    for platform in &self.platforms {
-                        // Verificar apenas se a plataforma está próxima do inimigo
-                        if platform.x + platform.width >= enemy.x - COLLISION_MARGIN 
-                            && platform.x <= enemy.x + enemy.width + COLLISION_MARGIN
-                            && platform.y + platform.height >= enemy.y - COLLISION_MARGIN
-                            && platform.y <= enemy.y + enemy.height + COLLISION_MARGIN
-                        {
-                            enemy.check_platform_collision(platform);
-                        }
-                    }
+                    Self::check_enemy_platform_collisions(enemy, &self.platforms);
                     
                     // Verificar bordas para não cair das plataformas (só se estiver no chão)
                     if enemy.on_ground {
@@ -1057,7 +1159,8 @@ impl Game {
                     }
                 }
                 
-                // Atualizar moedas (otimizado: só verificar moedas não coletadas)
+                // --- Atualização de Moedas ---
+                // Otimizado: só verificar moedas não coletadas
                 for coin in &mut self.coins {
                     if coin.collected {
                         continue; // Pular moedas já coletadas
@@ -1071,6 +1174,7 @@ impl Game {
                     }
                 }
                 
+                // --- Verificação de Conclusão de Fase ---
                 // Verificar se completou a fase (chegou ao final ou coletou todas as moedas)
                 if self.player.x > LEVEL_COMPLETE_X || self.coins_collected >= self.total_coins {
                     // Calcular bônus de tempo (pontos por segundo restante)
@@ -1164,56 +1268,27 @@ impl Game {
                 
                 // Atualizar player 1 (WASD) - apenas se não estiver em respawn
                 if self.respawn_timer_p1 <= 0.0 {
-                    // Movimento P1 (WASD)
                     let p1_left = is_key_down(KeyCode::A);
                     let p1_right = is_key_down(KeyCode::D);
-                    self.player.handle_movement_custom(p1_left, p1_right);
-                    
-                    self.player.update(dt);
-                    
-                    // Colisões P1 com plataformas
-                    let (px, py, pw, ph) = self.player.get_rect();
-                    for platform in &self.versus_platforms {
-                        if platform.check_collision(px, py, pw, ph) {
-                            self.player.check_platform_collision(platform);
-                        }
-                    }
-                    
-                    // Garantir que P1 está no chão se não estiver em plataforma
-                    if self.player.on_ground && self.player.vel_y == 0.0 {
-                        // Verificar se está realmente sobre uma plataforma
-                        let mut is_on_platform = false;
-                        for platform in &self.versus_platforms {
-                            if px + pw / 2.0 >= platform.x 
-                                && px + pw / 2.0 <= platform.x + platform.width
-                                && (self.player.y + PLAYER_HEIGHT - platform.y).abs() < 5.0
-                            {
-                                is_on_platform = true;
-                                break;
-                            }
-                        }
-                        // Se não está sobre plataforma, colocar no chão
-                        if !is_on_platform {
-                            self.player.y = GROUND_Y - PLAYER_HEIGHT;
-                        }
-                    }
-                    
-                    // Atualizar animação P1 (depois das colisões)
-                    self.player.update_animation(dt);
-                    
-                    // Pulo P1 (W ou Space) - usar is_key_down para pulos mais rápidos
                     let p1_jump = is_key_down(KeyCode::W) || is_key_down(KeyCode::Space);
-                    let jumped = self.player.handle_jump_custom(p1_jump);
+                    let use_easter_egg = self.is_easter_egg();
+                    let jumped = Self::update_versus_player_physics(
+                        &mut self.player,
+                        p1_left,
+                        p1_right,
+                        p1_jump,
+                        &self.versus_platforms,
+                        dt,
+                    );
                     if jumped {
-                        self.audio.play_jump(self.is_easter_egg());
+                        self.audio.play_jump(use_easter_egg);
                     }
-                    
-                    // Som de passos P1
+                    // Som de passos
                     const FOOTSTEP_INTERVAL: f32 = 0.25;
                     if self.player.on_ground && self.player.vel_x.abs() > 10.0 {
                         self.footstep_timer += dt;
                         if self.footstep_timer >= FOOTSTEP_INTERVAL {
-                            self.audio.play_footstep(self.is_easter_egg());
+                            self.audio.play_footstep(use_easter_egg);
                             self.footstep_timer = 0.0;
                         }
                     } else {
@@ -1224,64 +1299,26 @@ impl Game {
                 // Atualizar player 2 (Setas) - apenas se não estiver em respawn
                 if let Some(ref mut p2) = self.player2 {
                     if self.respawn_timer_p2 <= 0.0 {
-                        // Movimento P2 (Setas)
                         let p2_left = is_key_down(KeyCode::Left);
                         let p2_right = is_key_down(KeyCode::Right);
-                        p2.handle_movement_custom(p2_left, p2_right);
-                        
-                        p2.update(dt);
-                        
-                        // Colisões P2 com plataformas
-                        let (px2, py2, pw2, ph2) = p2.get_rect();
-                        for platform in &self.versus_platforms {
-                            if platform.check_collision(px2, py2, pw2, ph2) {
-                                p2.check_platform_collision(platform);
-                            }
-                        }
-                        
-                        // Garantir que P2 está no chão se não estiver em plataforma (mesma altura do P1)
-                        if p2.on_ground && p2.vel_y == 0.0 {
-                            // Verificar se está realmente sobre uma plataforma
-                            let mut is_on_platform = false;
-                            let mut platform_y = GROUND_Y;
-                            for platform in &self.versus_platforms {
-                                if px2 + pw2 / 2.0 >= platform.x 
-                                    && px2 + pw2 / 2.0 <= platform.x + platform.width
-                                    && (p2.y + PLAYER_HEIGHT - platform.y).abs() < 5.0
-                                {
-                                    is_on_platform = true;
-                                    platform_y = platform.y;
-                                    break;
-                                }
-                            }
-                            // Se não está sobre plataforma, colocar no chão (mesma altura do P1)
-                            if !is_on_platform {
-                                p2.y = GROUND_Y - PLAYER_HEIGHT;
-                            } else {
-                                // Se está sobre plataforma, garantir que está exatamente em cima
-                                p2.y = platform_y - PLAYER_HEIGHT;
-                            }
-                        }
-                        
-                        // Atualizar animação P2 (depois das colisões)
-                        p2.update_animation(dt);
-                        
-                        // Pulo P2 (Seta para cima) - usar is_key_down para pulos mais rápidos
                         let p2_jump = is_key_down(KeyCode::Up);
-                        let jumped = p2.handle_jump_custom(p2_jump);
+                        // No modo versus, não há easter egg (só no single player)
+                        let jumped = Self::update_versus_player_physics(
+                            p2,
+                            p2_left,
+                            p2_right,
+                            p2_jump,
+                            &self.versus_platforms,
+                            dt,
+                        );
                         if jumped {
-                            // No modo versus, não há easter egg (só no single player)
                             self.audio.play_jump(false);
                         }
                     } else {
                         // Durante respawn, ainda atualizar física (mas não controles)
                         p2.update(dt);
                         let (px2, py2, pw2, ph2) = p2.get_rect();
-                        for platform in &self.versus_platforms {
-                            if platform.check_collision(px2, py2, pw2, ph2) {
-                                p2.check_platform_collision(platform);
-                            }
-                        }
+                        Self::check_player_platform_collisions(p2, &self.versus_platforms, (px2, py2, pw2, ph2));
                     }
                 }
                 
@@ -1289,11 +1326,7 @@ impl Game {
                 if self.respawn_timer_p1 > 0.0 {
                     self.player.update(dt);
                     let (px, py, pw, ph) = self.player.get_rect();
-                    for platform in &self.versus_platforms {
-                        if platform.check_collision(px, py, pw, ph) {
-                            self.player.check_platform_collision(platform);
-                        }
-                    }
+                    Self::check_player_platform_collisions(&mut self.player, &self.versus_platforms, (px, py, pw, ph));
                 }
                 
                 // Verificar colisões entre players (morte por pulo)
@@ -1306,12 +1339,8 @@ impl Game {
                             // Incrementar streak e resetar streak do P2
                             self.player1_streak += 1;
                             self.player2_streak = 0;
-                            // Calcular pontos: 200 * (2 ^ (streak - 1))
-                            let points = if self.player1_streak > 0 {
-                                200 * (1 << (self.player1_streak - 1))
-                            } else {
-                                200
-                            };
+                            // Calcular pontos usando helper
+                            let points = Self::calculate_versus_points(self.player1_streak);
                             self.player1_points += points;
                             
                             self.audio.play_enemy_death(); // Som de eliminação
@@ -1326,12 +1355,8 @@ impl Game {
                             // Incrementar streak e resetar streak do P1
                             self.player2_streak += 1;
                             self.player1_streak = 0;
-                            // Calcular pontos: 200 * (2 ^ (streak - 1))
-                            let points = if self.player2_streak > 0 {
-                                200 * (1 << (self.player2_streak - 1))
-                            } else {
-                                200
-                            };
+                            // Calcular pontos usando helper
+                            let points = Self::calculate_versus_points(self.player2_streak);
                             self.player2_points += points;
                             
                             self.audio.play_enemy_death(); // Som de eliminação
@@ -1375,36 +1400,28 @@ impl Game {
                     }
                 }
                 
-                // Verificar se caiu do mapa (morte por queda)
+                // Verificar se caiu do mapa (morte por queda) - ambos os players
+                // P1 caiu - P2 ganha pontos
                 if self.player.y > FALL_DEATH_Y && self.respawn_timer_p1 <= 0.0 {
-                    // P1 caiu - P2 ganha pontos
                     self.player2_score += 1;
                     self.player2_streak += 1;
                     self.player1_streak = 0; // Resetar streak do P1
-                    // Calcular pontos: 200 * (2 ^ (streak - 1))
-                    let points = if self.player2_streak > 0 {
-                        200 * (1 << (self.player2_streak - 1))
-                    } else {
-                        200
-                    };
+                    // Calcular pontos usando helper
+                    let points = Self::calculate_versus_points(self.player2_streak);
                     self.player2_points += points;
                     
                     self.audio.play_enemy_death(); // Som de eliminação
                     self.respawn_timer_p1 = 2.0;
                 }
                 
+                // P2 caiu - P1 ganha pontos
                 if let Some(ref p2) = self.player2 {
                     if p2.y > FALL_DEATH_Y && self.respawn_timer_p2 <= 0.0 {
-                        // P2 caiu - P1 ganha pontos
                         self.player1_score += 1;
                         self.player1_streak += 1;
                         self.player2_streak = 0; // Resetar streak do P2
-                        // Calcular pontos: 200 * (2 ^ (streak - 1))
-                        let points = if self.player1_streak > 0 {
-                            200 * (1 << (self.player1_streak - 1))
-                        } else {
-                            200
-                        };
+                        // Calcular pontos usando helper
+                        let points = Self::calculate_versus_points(self.player1_streak);
                         self.player1_points += points;
                         
                         self.audio.play_enemy_death(); // Som de eliminação

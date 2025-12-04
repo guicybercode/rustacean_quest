@@ -16,16 +16,16 @@ const BLOCKED_WORDS: &[&str] = &[
 pub fn is_name_valid(name: &str) -> (bool, Option<String>) {
     // Verificar comprimento
     if name.len() < MIN_NAME_LENGTH {
-        return (false, Some(format!("Name must be at least {} characters", MIN_NAME_LENGTH)));
+        return (false, Some(format!("O nome deve ter pelo menos {} caracteres", MIN_NAME_LENGTH)));
     }
     if name.len() > MAX_NAME_LENGTH {
-        return (false, Some(format!("Name must be at most {} characters", MAX_NAME_LENGTH)));
+        return (false, Some(format!("O nome deve ter no máximo {} caracteres", MAX_NAME_LENGTH)));
     }
 
     // Verificar caracteres permitidos (alfanuméricos, espaço, hífen, underscore)
     for ch in name.chars() {
         if !ch.is_alphanumeric() && ch != ' ' && ch != '-' && ch != '_' {
-            return (false, Some("Name can only contain letters, numbers, spaces, hyphens, and underscores".to_string()));
+            return (false, Some("O nome pode conter apenas letras, números, espaços, hífens e underscores".to_string()));
         }
     }
 
@@ -33,7 +33,7 @@ pub fn is_name_valid(name: &str) -> (bool, Option<String>) {
     let name_lower = name.to_lowercase();
     for blocked_word in BLOCKED_WORDS {
         if name_lower.contains(blocked_word) {
-            return (false, Some("Name contains inappropriate content".to_string()));
+            return (false, Some("O nome contém conteúdo inadequado".to_string()));
         }
     }
 
