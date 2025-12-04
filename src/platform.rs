@@ -1,0 +1,182 @@
+use macroquad::prelude::*;
+
+#[derive(Clone, Copy)]
+pub struct Platform {
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
+}
+
+impl Platform {
+    pub fn new(x: f32, y: f32, width: f32, height: f32) -> Self {
+        Self { x, y, width, height }
+    }
+
+    #[inline]
+    pub fn check_collision(&self, other_x: f32, other_y: f32, other_w: f32, other_h: f32) -> bool {
+        // Verificação AABB direta (simples e rápida)
+        other_x < self.x + self.width
+            && other_x + other_w > self.x
+            && other_y < self.y + self.height
+            && other_y + other_h > self.y
+    }
+
+    pub fn get_collision_response(
+        &self,
+        x: f32,
+        y: f32,
+        w: f32,
+        h: f32,
+        vel_y: f32,
+    ) -> Option<(f32, f32, bool)> {
+        if !self.check_collision(x, y, w, h) {
+            return None;
+        }
+        
+        // Calcular sobreposição
+        let overlap_left = (x + w) - self.x;
+        let overlap_right = (self.x + self.width) - x;
+        let overlap_top = (y + h) - self.y;
+        let overlap_bottom = (self.y + self.height) - y;
+        
+        // Encontrar a menor sobreposição para determinar a direção da colisão
+        let min_overlap = overlap_left.min(overlap_right).min(overlap_top).min(overlap_bottom);
+        
+        // Colisão por cima (piso) - agora detecta mesmo com vel_y = 0
+        // A condição vel_y >= 0 permite que jogadores parados no chão sejam detectados
+        if min_overlap == overlap_top && vel_y >= 0.0 {
+            return Some((x, self.y - h, true));
+        }
+        
+        // Colisão por baixo (teto) - só quando está subindo
+        if min_overlap == overlap_bottom && vel_y < 0.0 {
+            return Some((x, self.y + self.height, false));
+        }
+        
+        // Colisão lateral
+        if min_overlap == overlap_left {
+            return Some((self.x - w, y, false));
+        }
+        if min_overlap == overlap_right {
+            return Some((self.x + self.width, y, false));
+        }
+        
+        // Fallback: colisão por cima (para quando está parado no chão)
+        if overlap_top < overlap_bottom {
+            Some((x, self.y - h, true))
+        } else {
+            None
+        }
+    }
+
+    pub fn draw(&self, camera_x: f32, camera_y: f32) {
+        let screen_x = self.x - camera_x;
+        let screen_y = self.y - camera_y;
+        
+        // Desenhar plataforma em preto e branco
+        draw_rectangle(screen_x, screen_y, self.width, self.height, WHITE);
+        draw_rectangle_lines(screen_x, screen_y, self.width, self.height, 2.0, BLACK);
+    }
+}
+
+pub fn create_level_platforms(level: usize) -> Vec<Platform> {
+    let mut platforms = Vec::new();
+    
+    match level {
+        1 => {
+            // Fase 1 - Layout clássico
+            platforms.push(Platform::new(0.0, 550.0, 3000.0, 50.0));
+            platforms.push(Platform::new(200.0, 450.0, 150.0, 20.0));
+            platforms.push(Platform::new(400.0, 400.0, 150.0, 20.0));
+            platforms.push(Platform::new(600.0, 350.0, 150.0, 20.0));
+            platforms.push(Platform::new(800.0, 450.0, 200.0, 20.0));
+            platforms.push(Platform::new(1100.0, 400.0, 150.0, 20.0));
+            platforms.push(Platform::new(1300.0, 350.0, 150.0, 20.0));
+            platforms.push(Platform::new(1500.0, 400.0, 150.0, 20.0));
+            platforms.push(Platform::new(1700.0, 300.0, 200.0, 20.0));
+            platforms.push(Platform::new(2000.0, 450.0, 150.0, 20.0));
+            platforms.push(Platform::new(2200.0, 400.0, 150.0, 20.0));
+            platforms.push(Platform::new(2400.0, 350.0, 150.0, 20.0));
+            platforms.push(Platform::new(500.0, 500.0, 40.0, 50.0));
+            platforms.push(Platform::new(1200.0, 500.0, 40.0, 50.0));
+            platforms.push(Platform::new(1900.0, 500.0, 40.0, 50.0));
+        }
+        2 => {
+            // Fase 2 - Mais vertical e desafiadora
+            platforms.push(Platform::new(0.0, 550.0, 3000.0, 50.0));
+            platforms.push(Platform::new(150.0, 500.0, 100.0, 20.0));
+            platforms.push(Platform::new(300.0, 450.0, 100.0, 20.0));
+            platforms.push(Platform::new(450.0, 400.0, 100.0, 20.0));
+            platforms.push(Platform::new(600.0, 350.0, 100.0, 20.0));
+            platforms.push(Platform::new(750.0, 300.0, 100.0, 20.0));
+            platforms.push(Platform::new(900.0, 250.0, 100.0, 20.0));
+            platforms.push(Platform::new(1050.0, 300.0, 100.0, 20.0));
+            platforms.push(Platform::new(1200.0, 350.0, 100.0, 20.0));
+            platforms.push(Platform::new(1350.0, 400.0, 100.0, 20.0));
+            platforms.push(Platform::new(1500.0, 450.0, 100.0, 20.0));
+            platforms.push(Platform::new(1650.0, 500.0, 100.0, 20.0));
+            platforms.push(Platform::new(1800.0, 400.0, 200.0, 20.0));
+            platforms.push(Platform::new(2100.0, 350.0, 150.0, 20.0));
+            platforms.push(Platform::new(2300.0, 300.0, 150.0, 20.0));
+            platforms.push(Platform::new(2500.0, 250.0, 200.0, 20.0));
+        }
+        3 => {
+            // Fase 3 - Layout com mais espaços e desafios
+            platforms.push(Platform::new(0.0, 550.0, 3000.0, 50.0));
+            platforms.push(Platform::new(100.0, 450.0, 200.0, 20.0));
+            platforms.push(Platform::new(400.0, 500.0, 150.0, 20.0));
+            platforms.push(Platform::new(650.0, 450.0, 100.0, 20.0));
+            platforms.push(Platform::new(850.0, 400.0, 150.0, 20.0));
+            platforms.push(Platform::new(1100.0, 350.0, 100.0, 20.0));
+            platforms.push(Platform::new(1300.0, 300.0, 200.0, 20.0));
+            platforms.push(Platform::new(1600.0, 350.0, 150.0, 20.0));
+            platforms.push(Platform::new(1850.0, 400.0, 100.0, 20.0));
+            platforms.push(Platform::new(2050.0, 450.0, 150.0, 20.0));
+            platforms.push(Platform::new(2300.0, 500.0, 100.0, 20.0));
+            platforms.push(Platform::new(2500.0, 450.0, 200.0, 20.0));
+            // Plataformas flutuantes
+            platforms.push(Platform::new(300.0, 300.0, 80.0, 20.0));
+            platforms.push(Platform::new(500.0, 250.0, 80.0, 20.0));
+            platforms.push(Platform::new(700.0, 200.0, 80.0, 20.0));
+            platforms.push(Platform::new(1500.0, 200.0, 80.0, 20.0));
+            platforms.push(Platform::new(1700.0, 250.0, 80.0, 20.0));
+        }
+        4 => {
+            // Fase 4 - Fase final mais desafiadora
+            platforms.push(Platform::new(0.0, 550.0, 3000.0, 50.0));
+            // Plataformas em zigue-zague
+            platforms.push(Platform::new(100.0, 500.0, 120.0, 20.0));
+            platforms.push(Platform::new(250.0, 450.0, 120.0, 20.0));
+            platforms.push(Platform::new(400.0, 500.0, 120.0, 20.0));
+            platforms.push(Platform::new(550.0, 450.0, 120.0, 20.0));
+            platforms.push(Platform::new(700.0, 500.0, 120.0, 20.0));
+            platforms.push(Platform::new(850.0, 450.0, 120.0, 20.0));
+            // Plataformas altas
+            platforms.push(Platform::new(1000.0, 350.0, 150.0, 20.0));
+            platforms.push(Platform::new(1200.0, 300.0, 150.0, 20.0));
+            platforms.push(Platform::new(1400.0, 250.0, 150.0, 20.0));
+            platforms.push(Platform::new(1600.0, 200.0, 150.0, 20.0));
+            // Plataformas intermediárias
+            platforms.push(Platform::new(1800.0, 400.0, 100.0, 20.0));
+            platforms.push(Platform::new(1950.0, 350.0, 100.0, 20.0));
+            platforms.push(Platform::new(2100.0, 300.0, 100.0, 20.0));
+            platforms.push(Platform::new(2250.0, 250.0, 100.0, 20.0));
+            // Plataformas flutuantes pequenas
+            platforms.push(Platform::new(2400.0, 400.0, 80.0, 20.0));
+            platforms.push(Platform::new(2550.0, 350.0, 80.0, 20.0));
+            platforms.push(Platform::new(2700.0, 300.0, 80.0, 20.0));
+            // Canos
+            platforms.push(Platform::new(600.0, 500.0, 40.0, 50.0));
+            platforms.push(Platform::new(1500.0, 500.0, 40.0, 50.0));
+            platforms.push(Platform::new(2300.0, 500.0, 40.0, 50.0));
+        }
+        _ => {
+            // Fallback para fase 1
+            platforms.push(Platform::new(0.0, 550.0, 3000.0, 50.0));
+        }
+    }
+    
+    platforms
+}
+
