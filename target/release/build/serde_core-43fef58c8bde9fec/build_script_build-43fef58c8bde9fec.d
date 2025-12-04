@@ -1,5 +1,0 @@
-/home/guicybercode/Documents/gui_things/github teste readme/target/release/build/serde_core-43fef58c8bde9fec/build_script_build-43fef58c8bde9fec.d: /home/guicybercode/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/build.rs
-
-/home/guicybercode/Documents/gui_things/github teste readme/target/release/build/serde_core-43fef58c8bde9fec/build_script_build-43fef58c8bde9fec: /home/guicybercode/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/build.rs
-
-/home/guicybercode/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_core-1.0.228/build.rs:
