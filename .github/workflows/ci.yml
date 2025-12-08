@@ -12,6 +12,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install ALSA dev libs
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+
       - name: Install toolchain
         uses: actions-rs/toolchain@v1
         with:
