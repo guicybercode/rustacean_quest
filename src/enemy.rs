@@ -1,5 +1,6 @@
 use macroquad::prelude::*;
 use crate::constants::*;
+use std::rc::Rc;
 
 pub struct Enemy {
     pub x: f32,
@@ -7,22 +8,30 @@ pub struct Enemy {
     pub width: f32,
     pub height: f32,
     pub vel_x: f32,
-    pub vel_y: f32,  // Velocidade vertical para física correta
+    pub vel_y: f32,  
     pub alive: bool,
     pub on_ground: bool,
+    pub facing_right: bool,
+    pub texture: Option<Rc<Texture2D>>,
+    pub anim_frame: usize,
+    pub anim_timer: f32,
 }
 
 impl Enemy {
-    pub fn new(x: f32, y: f32) -> Self {
+    pub fn new(x: f32, y: f32, texture: Option<Rc<Texture2D>>) -> Self {
         Self {
             x,
             y,
             width: ENEMY_WIDTH,
             height: ENEMY_HEIGHT,
-            vel_x: -ENEMY_SPEED, // Velocidade inicial horizontal
-            vel_y: 0.0,          // Velocidade inicial vertical
+            vel_x: -ENEMY_SPEED, 
+            vel_y: 0.0,          
             alive: true,
-            on_ground: true, // Começar no chão para evitar queda imediata
+            on_ground: true, 
+            facing_right: false,
+            texture,
+            anim_frame: 0,
+            anim_timer: 0.0,
         }
     }
 
@@ -31,24 +40,38 @@ impl Enemy {
             return;
         }
         
-        // Mover horizontalmente primeiro
+        
         self.x += self.vel_x * dt;
         
-        // Aplicar gravidade na velocidade (não na posição diretamente)
+        
         if !self.on_ground {
-            self.vel_y += ENEMY_GRAVITY * dt; // Gravidade acelera a queda
+            self.vel_y += ENEMY_GRAVITY * dt; 
         }
         
-        // Limitar velocidade terminal
+        
         if self.vel_y > TERMINAL_VELOCITY {
             self.vel_y = TERMINAL_VELOCITY;
         }
         
-        // Atualizar posição vertical baseado na velocidade
+        
         self.y += self.vel_y * dt;
         
-        // Resetar flag de chão (será atualizado na colisão)
+        
         self.on_ground = false;
+
+        self.facing_right = self.vel_x >= 0.0;
+
+        if self.texture.is_some() && self.on_ground {
+            const ANIMATION_SPEED: f32 = 0.12;
+            self.anim_timer += dt;
+            if self.anim_timer >= ANIMATION_SPEED {
+                self.anim_timer = 0.0;
+                self.anim_frame = (self.anim_frame + 1) % 4;
+            }
+        } else {
+            self.anim_frame = 0;
+            self.anim_timer = 0.0;
+        }
     }
 
     #[inline]
@@ -57,24 +80,24 @@ impl Enemy {
             return;
         }
         
-        // Verificação AABB direta
+        
         if self.x < platform.x + platform.width
             && self.x + self.width > platform.x
             && self.y < platform.y + platform.height
             && self.y + self.height > platform.y
         {
-            // Calcular sobreposições
+            
             let overlap_top = (self.y + self.height) - platform.y;
             let overlap_left = (self.x + self.width) - platform.x;
             let overlap_right = (platform.x + platform.width) - self.x;
             
-            // Se overlap vertical é menor, é colisão por cima (pousando na plataforma)
+            
             if overlap_top < overlap_left.min(overlap_right) && overlap_top < PLATFORM_COLLISION_THRESHOLD && self.vel_y >= 0.0 {
                 self.y = platform.y - self.height;
-                self.vel_y = 0.0; // Resetar velocidade vertical ao pousar
+                self.vel_y = 0.0; 
                 self.on_ground = true;
             } else {
-                // Colisão lateral - inverter direção
+                
                 self.vel_x = -self.vel_x;
                 if self.vel_x > 0.0 {
                     self.x = platform.x + platform.width + 1.0;
@@ -85,14 +108,14 @@ impl Enemy {
         }
     }
     
-    // Verificar se há plataforma à frente e abaixo (para não cair)
+    
     #[inline]
     pub fn check_edge(&mut self, platforms: &[crate::platform::Platform]) {
         if !self.alive || !self.on_ground {
             return;
         }
         
-        // Verificar se há plataforma abaixo e à frente (na direção do movimento)
+        
         let check_offset_x = if self.vel_x > 0.0 {
             self.width + 2.0
         } else {
@@ -105,7 +128,7 @@ impl Enemy {
         let mut found_platform_below = false;
         
         for platform in platforms {
-            // Verificação direta (mais rápida)
+            
             if check_x >= platform.x 
                 && check_x <= platform.x + platform.width
                 && check_y >= platform.y 
@@ -133,15 +156,15 @@ impl Enemy {
         
         if self.y + self.height >= ground_y {
             self.y = ground_y - self.height;
-            self.vel_y = 0.0; // Resetar velocidade vertical ao tocar o chão
+            self.vel_y = 0.0; 
             self.on_ground = true;
         }
     }
 
-    /// Resultado da colisão jogador-inimigo
-    /// - None: sem colisão
-    /// - Some(true): jogador morreu
-    /// - Some(false): inimigo morreu (jogador deve quicar)
+    
+    
+    
+    
     pub fn check_player_collision(
         &mut self,
         player_x: f32,
@@ -155,26 +178,26 @@ impl Enemy {
         }
         
         if self.check_collision(player_x, player_y, player_w, player_h) {
-            // Calcular a posição relativa do jogador em relação ao inimigo
+            
             let player_bottom = player_y + player_h;
             let enemy_top = self.y;
             let enemy_center_y = self.y + self.height / 2.0;
             
-            // Margem de tolerância para considerar "em cima" do inimigo
-            // O jogador está "em cima" se:
-            // 1. Está caindo (vel_y > 0) ou quase parado (vel_y >= -50)
-            // 2. A parte de baixo do jogador está na metade superior do inimigo
+            
+            
+            
+            
             let is_on_top = player_vel_y >= -50.0 && player_bottom <= enemy_center_y + 10.0;
             
-            // Também considerar se o jogador está acima do topo do inimigo (caindo sobre ele)
+            
             let is_falling_on_top = player_vel_y > 0.0 && player_bottom <= enemy_top + self.height * 0.7;
             
             if is_on_top || is_falling_on_top {
                 self.alive = false;
-                return Some(false); // Inimigo morreu, jogador deve quicar
+                return Some(false); 
             }
             
-            // Caso contrário, mata o jogador
+            
             return Some(true);
         }
         None
@@ -194,80 +217,117 @@ impl Enemy {
         
         let screen_x = self.x - camera_x;
         let screen_y = self.y - camera_y;
-        
-        // Desenhar inimigo em preto e branco (Goomba simples)
-        draw_rectangle(screen_x, screen_y, self.width, self.height, GRAY);
-        draw_rectangle_lines(screen_x, screen_y, self.width, self.height, 2.0, BLACK);
-        
-        // Olhos simples
-        draw_circle(screen_x + 6.0, screen_y + 8.0, 2.0, BLACK);
-        draw_circle(screen_x + 18.0, screen_y + 8.0, 2.0, BLACK);
+
+        if let Some(tex) = &self.texture {
+            let frame_w = tex.width() / 4.0;
+            let frame_h = tex.height();
+            let source_x = self.anim_frame as f32 * frame_w;
+            let source = Rect::new(source_x, 0.0, frame_w, frame_h);
+            let params = DrawTextureParams {
+                dest_size: Some(vec2(self.width, self.height)),
+                source: Some(source),
+                rotation: 0.0,
+                flip_x: !self.facing_right,
+                flip_y: false,
+                pivot: None,
+            };
+            draw_texture_ex(&**tex, screen_x, screen_y, WHITE, params);
+        } else {
+            draw_rectangle(screen_x, screen_y, self.width, self.height, GRAY);
+            draw_rectangle_lines(screen_x, screen_y, self.width, self.height, 2.0, BLACK);
+            draw_circle(screen_x + 6.0, screen_y + 8.0, 2.0, BLACK);
+            draw_circle(screen_x + 18.0, screen_y + 8.0, 2.0, BLACK);
+        }
     }
 }
 
-pub fn create_level_enemies(level: usize) -> Vec<Enemy> {
+pub fn create_level_enemies(level: usize, textures: Option<&[Rc<Texture2D>]>) -> Vec<Enemy> {
     let mut enemies = Vec::new();
+
+    let texture_for = |idx: usize| -> Option<Rc<Texture2D>> {
+        textures.and_then(|t| t.get(idx % t.len()).cloned())
+    };
     
     match level {
         1 => {
-            // Fase 1
-            enemies.push(Enemy::new(300.0, 420.0));
-            enemies.push(Enemy::new(500.0, 370.0));
-            enemies.push(Enemy::new(700.0, 320.0));
-            enemies.push(Enemy::new(900.0, 420.0));
-            enemies.push(Enemy::new(1200.0, 370.0));
-            enemies.push(Enemy::new(1400.0, 320.0));
-            enemies.push(Enemy::new(1600.0, 370.0));
-            enemies.push(Enemy::new(2100.0, 420.0));
-            enemies.push(Enemy::new(2300.0, 370.0));
+            
+            enemies.push(Enemy::new(300.0, 420.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(500.0, 370.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(700.0, 320.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(900.0, 420.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1200.0, 370.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1400.0, 320.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1600.0, 370.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(2100.0, 420.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(2300.0, 370.0, texture_for(enemies.len())));
         }
         2 => {
-            // Fase 2 - Mais inimigos
-            enemies.push(Enemy::new(200.0, 470.0));
-            enemies.push(Enemy::new(350.0, 420.0));
-            enemies.push(Enemy::new(500.0, 370.0));
-            enemies.push(Enemy::new(650.0, 320.0));
-            enemies.push(Enemy::new(800.0, 270.0));
-            enemies.push(Enemy::new(950.0, 220.0));
-            enemies.push(Enemy::new(1100.0, 270.0));
-            enemies.push(Enemy::new(1250.0, 320.0));
-            enemies.push(Enemy::new(1400.0, 370.0));
-            enemies.push(Enemy::new(1550.0, 420.0));
-            enemies.push(Enemy::new(1700.0, 470.0));
+            
+            enemies.push(Enemy::new(200.0, 470.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(350.0, 420.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(500.0, 370.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(650.0, 320.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(800.0, 270.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(950.0, 220.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1100.0, 270.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1250.0, 320.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1400.0, 370.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1550.0, 420.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1700.0, 470.0, texture_for(enemies.len())));
         }
         3 => {
-            // Fase 3
-            enemies.push(Enemy::new(200.0, 420.0));
-            enemies.push(Enemy::new(500.0, 470.0));
-            enemies.push(Enemy::new(700.0, 420.0));
-            enemies.push(Enemy::new(900.0, 370.0));
-            enemies.push(Enemy::new(1150.0, 320.0));
-            enemies.push(Enemy::new(1350.0, 270.0));
-            enemies.push(Enemy::new(1650.0, 320.0));
-            enemies.push(Enemy::new(1900.0, 370.0));
-            enemies.push(Enemy::new(2100.0, 420.0));
-            enemies.push(Enemy::new(2350.0, 470.0));
-            enemies.push(Enemy::new(2550.0, 420.0));
-            enemies.push(Enemy::new(400.0, 270.0));
-            enemies.push(Enemy::new(600.0, 220.0));
+            
+            enemies.push(Enemy::new(200.0, 420.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(500.0, 470.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(700.0, 420.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(900.0, 370.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1150.0, 320.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1350.0, 270.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1650.0, 320.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1900.0, 370.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(2100.0, 420.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(2350.0, 470.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(2550.0, 420.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(400.0, 270.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(600.0, 220.0, texture_for(enemies.len())));
         }
         4 => {
-            // Fase 4 - Mais inimigos
-            enemies.push(Enemy::new(150.0, 470.0));
-            enemies.push(Enemy::new(300.0, 420.0));
-            enemies.push(Enemy::new(450.0, 470.0));
-            enemies.push(Enemy::new(600.0, 420.0));
-            enemies.push(Enemy::new(750.0, 470.0));
-            enemies.push(Enemy::new(900.0, 420.0));
-            enemies.push(Enemy::new(1100.0, 320.0));
-            enemies.push(Enemy::new(1300.0, 270.0));
-            enemies.push(Enemy::new(1500.0, 220.0));
-            enemies.push(Enemy::new(1700.0, 170.0));
-            enemies.push(Enemy::new(1900.0, 370.0));
-            enemies.push(Enemy::new(2100.0, 320.0));
-            enemies.push(Enemy::new(2300.0, 270.0));
-            enemies.push(Enemy::new(2500.0, 220.0));
-            enemies.push(Enemy::new(2700.0, 320.0));
+            
+            enemies.push(Enemy::new(150.0, 470.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(300.0, 420.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(450.0, 470.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(600.0, 420.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(750.0, 470.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(900.0, 420.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1100.0, 320.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1300.0, 270.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1500.0, 220.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1700.0, 170.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1900.0, 370.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(2100.0, 320.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(2300.0, 270.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(2500.0, 220.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(2700.0, 320.0, texture_for(enemies.len())));
+        }
+        5 => {
+            enemies.push(Enemy::new(350.0, 480.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(620.0, 430.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(880.0, 370.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1150.0, 320.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1420.0, 400.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1680.0, 250.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(1880.0, 200.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(2120.0, 420.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(2380.0, 360.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(2580.0, 300.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(2780.0, 260.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(3020.0, 480.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(3220.0, 420.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(3420.0, 360.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(3620.0, 320.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(3820.0, 260.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(4020.0, 220.0, texture_for(enemies.len())));
+            enemies.push(Enemy::new(4100.0, 500.0, texture_for(enemies.len())));
         }
         _ => {}
     }

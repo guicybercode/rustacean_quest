@@ -13,20 +13,20 @@ use crate::name_filter;
 
 pub enum GameState {
     Menu,
-    MenuExitConfirm, // Confirmação para sair
+    MenuExitConfirm, 
     Credits,
     Settings,
     LevelSelect,
     Playing,
     GameOver,
     LevelComplete,
-    Versus, // Modo versus/coop
-    VersusEnd, // Fim do modo versus (mostrar resultados)
-    Respawn, // Tela de respawn após morte
-    ContinueMenu, // Menu de continue para gerenciar saves
-    NameInput, // Tela de entrada de nome
-    Tutorial, // Tela de tutorial
-    Pause, // Menu de pausa durante o jogo
+    Versus, 
+    VersusEnd, 
+    Respawn, 
+    ContinueMenu, 
+    NameInput, 
+    Tutorial, 
+    Pause, 
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -46,93 +46,112 @@ pub struct Game {
     state: GameState,
     coins_collected: u32,
     total_coins: u32,
-    menu_selection: usize, // 0 = Play, 1 = Versus, 2 = Settings, 3 = Credits, 4 = Exit
-    menu_animation_time: f32, // Tempo para animação de seleção
-    level_selection: usize, // 0-3 para as 4 fases
-    current_level: usize, // Fase atual sendo jogada
-    unlocked_levels: Vec<bool>, // Fases desbloqueadas (índice 0 = fase 1, etc)
-    last_checkpoint_pos: Option<(f32, f32)>, // Posição do último checkpoint ativado
-    time_remaining: f32, // Tempo restante em segundos
-    // Configurações
-    settings_selection: usize, // 0 = Som, 1 = Resolução, 2 = Controles, 3 = Voltar
+    menu_selection: usize, 
+    menu_animation_time: f32, 
+    level_selection: usize, 
+    current_level: usize, 
+    unlocked_levels: Vec<bool>, 
+    last_checkpoint_pos: Option<(f32, f32)>, 
+    time_remaining: f32, 
+    
+    settings_selection: usize, 
     sound_enabled: bool,
-    resolution_index: usize, // Índice da resolução atual
-    // Pontuação
-    score: u32, // Pontuação total atual
-    // Vidas
-    lives: u32, // Número de vidas do jogador
-    respawn_timer: f32, // Timer de respawn após morte
-    game_over_fade_timer: f32, // Timer para fadeout no game over
-    level_start_fade_timer: f32, // Timer para fadein ao iniciar fase
-    // Áudio de passos
-    footstep_timer: f32, // Timer para controlar frequência dos passos
-    // Modo Versus
-    player2: Option<Player>, // Segundo jogador no modo versus
-    player1_score: u32, // Kills do jogador 1
-    player2_score: u32, // Kills do jogador 2
-    player1_streak: u32, // Contador de kills consecutivas do P1
-    player2_streak: u32, // Contador de kills consecutivas do P2
-    player1_points: u32, // Pontuação total do P1
-    player2_points: u32, // Pontuação total do P2
-    versus_platforms: Vec<Platform>, // Plataformas do mapa versus
-    respawn_timer_p1: f32, // Timer de respawn do player 1
-    respawn_timer_p2: f32, // Timer de respawn do player 2
-    versus_time_remaining: f32, // Tempo restante no modo versus (600 segundos)
-    // Sistema de saves e nome
-    player_name: String, // Nome do jogador
-    continue_selection: usize, // Índice do save selecionado (0-2)
-    continue_mode: ContinueMode, // Modo do menu continue
-    name_input: String, // Texto sendo digitado na tela de nome
-    name_input_error: Option<String>, // Mensagem de erro na validação
-    // Tutorial e transições
-    tutorial_page: usize, // Página atual do tutorial (0-indexed)
-    tutorial_completed: bool, // Se o tutorial foi completado
-    transition_timer: f32, // Timer para transições entre telas
-    transition_alpha: f32, // Alpha para fade in/out
-    transition_target_state: Option<GameState>, // Estado de destino da transição
-    versus_played: bool, // Se o modo versus já foi jogado
-    has_new_save: bool, // Se há um save novo desde a última vez
-    last_save_timestamp: u64, // Último timestamp de save conhecido
-    save_check_timer: f32, // Timer para verificar saves novos (não a cada frame)
-    level_info_cache: Vec<(String, usize, Color)>, // Cache das informações dos níveis
-    // Menu de pausa
-    pause_selection: usize, // Seleção no menu de pausa (0 = Resume, 1 = Settings, 2 = Credits, 3 = Main Menu)
-    came_from_pause: bool, // Se veio do menu de pausa (para voltar corretamente)
-    // Sprites
-    player_sprite_texture_p1: Option<std::rc::Rc<Texture2D>>, // Textura do sprite do Ferris P1 (laranja)
-    player_sprite_texture_p2: Option<std::rc::Rc<Texture2D>>, // Textura do sprite do Ferris P2 (escuro)
+    resolution_index: usize, 
+    
+    score: u32, 
+    
+    lives: u32, 
+    respawn_timer: f32, 
+    game_over_fade_timer: f32, 
+    level_start_fade_timer: f32, 
+    
+    footstep_timer: f32, 
+    
+    player2: Option<Player>, 
+    player1_score: u32, 
+    player2_score: u32, 
+    player1_streak: u32, 
+    player2_streak: u32, 
+    player1_points: u32, 
+    player2_points: u32, 
+    versus_platforms: Vec<Platform>, 
+    respawn_timer_p1: f32, 
+    respawn_timer_p2: f32, 
+    versus_time_remaining: f32, 
+    
+    player_name: String, 
+    continue_selection: usize, 
+    continue_mode: ContinueMode, 
+    name_input: String, 
+    name_input_error: Option<String>, 
+    
+    tutorial_page: usize, 
+    tutorial_completed: bool, 
+    transition_timer: f32, 
+    transition_alpha: f32, 
+    transition_target_state: Option<GameState>, 
+    versus_played: bool, 
+    has_new_save: bool, 
+    last_save_timestamp: u64, 
+    save_check_timer: f32, 
+    level_info_cache: Vec<(String, usize, Color)>, 
+    
+    pause_selection: usize, 
+    came_from_pause: bool, 
+    
+    player_sprite_texture_p1: Option<std::rc::Rc<Texture2D>>, 
+    player_sprite_texture_p2: Option<std::rc::Rc<Texture2D>>, 
+    enemy_textures: Vec<std::rc::Rc<Texture2D>>,
 }
 
 impl Game {
     pub async fn new() -> Self {
-        // Inicialmente só a fase 1 está desbloqueada
-        let mut unlocked_levels = vec![false; 4];
-        unlocked_levels[0] = true; // Fase 1 desbloqueada
+        
+        let mut unlocked_levels = vec![false; MAX_LEVELS];
+        unlocked_levels[0] = true; 
         
         let mut audio = AudioManager::new();
         audio.load_sounds().await;
         
-        // Carregar sprites do Ferris (P1 e P2 separados)
-        let player_sprite_texture_p1 = match load_texture("assets/rustcean_p1.png").await {
-            Ok(texture) => {
-                texture.set_filter(FilterMode::Nearest); // Manter pixel art nítida
-                Some(std::rc::Rc::new(texture))
-            },
-            Err(e) => {
-                eprintln!("Erro ao carregar sprite do Ferris P1: {:?}", e);
-                None
-            }
-        };
         
-        let player_sprite_texture_p2 = match load_texture("assets/rustcean_p2.png").await {
+        let mut enemy_textures = Vec::new();
+
+        let player_sprite_texture_p1 = match load_texture("assets/crab1.png").await {
             Ok(texture) => {
-                texture.set_filter(FilterMode::Nearest); // Manter pixel art nítida
-                Some(std::rc::Rc::new(texture))
-            },
-            Err(e) => {
-                eprintln!("Erro ao carregar sprite do Ferris P2: {:?}", e);
-                None
+                texture.set_filter(FilterMode::Nearest);
+                let rc = std::rc::Rc::new(texture);
+                enemy_textures.push(std::rc::Rc::clone(&rc));
+                Some(rc)
             }
+            Err(_) => match load_texture("assets/rustcean_p1.png").await {
+                Ok(texture) => {
+                    texture.set_filter(FilterMode::Nearest);
+                    Some(std::rc::Rc::new(texture))
+                }
+                Err(e) => {
+                    eprintln!("Erro ao carregar sprite P1: {:?}", e);
+                    None
+                }
+            },
+        };
+
+        let player_sprite_texture_p2 = match load_texture("assets/crab2.png").await {
+            Ok(texture) => {
+                texture.set_filter(FilterMode::Nearest);
+                let rc = std::rc::Rc::new(texture);
+                enemy_textures.push(std::rc::Rc::clone(&rc));
+                Some(rc)
+            }
+            Err(_) => match load_texture("assets/rustcean_p2.png").await {
+                Ok(texture) => {
+                    texture.set_filter(FilterMode::Nearest);
+                    Some(std::rc::Rc::new(texture))
+                }
+                Err(e) => {
+                    eprintln!("Erro ao carregar sprite P2: {:?}", e);
+                    None
+                }
+            },
         };
         
         Self {
@@ -153,20 +172,20 @@ impl Game {
             unlocked_levels,
             last_checkpoint_pos: None,
             time_remaining: 0.0,
-            // Configurações padrão
+            
             settings_selection: 0,
             sound_enabled: true,
-            resolution_index: 0, // 800x600 padrão
-            // Pontuação
+            resolution_index: 0, 
+            
             score: 0,
-            // Vidas
-            lives: 5, // Começar com 5 vidas
-            respawn_timer: 0.0, // Timer de respawn
-            game_over_fade_timer: 0.0, // Timer de fadeout no game over
-            level_start_fade_timer: 1.5, // Timer de fadein ao iniciar fase (1.5 segundos)
-            // Áudio de passos
+            
+            lives: 5, 
+            respawn_timer: 0.0, 
+            game_over_fade_timer: 0.0, 
+            level_start_fade_timer: 1.5, 
+            
             footstep_timer: 0.0,
-            // Modo Versus
+            
             player2: None,
             player1_score: 0,
             player2_score: 0,
@@ -177,14 +196,14 @@ impl Game {
             versus_platforms: Vec::new(),
             respawn_timer_p1: 0.0,
             respawn_timer_p2: 0.0,
-            versus_time_remaining: 600.0, // 10 minutos
-            // Sistema de saves e nome
+            versus_time_remaining: 600.0, 
+            
             player_name: String::new(),
             continue_selection: 0,
             continue_mode: ContinueMode::View,
             name_input: String::new(),
             name_input_error: None,
-            // Tutorial e transições
+            
             tutorial_page: 0,
             tutorial_completed: false,
             transition_timer: 0.0,
@@ -195,16 +214,17 @@ impl Game {
             last_save_timestamp: 0,
             save_check_timer: 0.0,
             level_info_cache: Self::init_level_info_cache(),
-            // Menu de pausa
+            
             pause_selection: 0,
             came_from_pause: false,
-            // Sprites
+            
             player_sprite_texture_p1,
             player_sprite_texture_p2,
+            enemy_textures,
         }
     }
     
-    /// Inicializa o cache de informações dos níveis
+    
     fn init_level_info_cache() -> Vec<(String, usize, Color)> {
         let mut cache = Vec::new();
         for level in 1..=MAX_LEVELS {
@@ -214,8 +234,9 @@ impl Game {
             let (difficulty, color) = match level {
                 1 => ("EASY".to_string(), GREEN),
                 2 => ("MEDIUM".to_string(), YELLOW),
-                3 => ("HARD".to_string(), Color::new(1.0, 0.65, 0.0, 1.0)), // Laranja
+                3 => ("HARD".to_string(), Color::new(1.0, 0.65, 0.0, 1.0)), 
                 4 => ("EXPERT".to_string(), RED),
+                5 => ("INSANE".to_string(), BLACK),
                 _ => ("UNKNOWN".to_string(), GRAY),
             };
             
@@ -241,6 +262,9 @@ impl Game {
             unlocked_levels: self.unlocked_levels.clone(),
             lives: self.lives,
             score: self.score,
+            coins_collected: self.coins_collected,
+            total_coins: self.total_coins,
+            time_remaining: self.time_remaining,
             time_taken,
             timestamp,
             last_checkpoint_pos: self.last_checkpoint_pos,
@@ -260,6 +284,10 @@ impl Game {
         self.unlocked_levels = save_data.unlocked_levels;
         self.lives = save_data.lives;
         self.score = save_data.score;
+        let default_total = create_level_coins(self.current_level).len() as u32;
+        self.total_coins = if save_data.total_coins == 0 { default_total } else { save_data.total_coins };
+        self.coins_collected = save_data.coins_collected.min(self.total_coins);
+        self.time_remaining = if save_data.time_remaining > 0.0 { save_data.time_remaining } else { TIME_LIMIT };
         self.last_checkpoint_pos = save_data.last_checkpoint_pos;
         self.player_name = save_data.player_name;
         self.tutorial_completed = save_data.tutorial_completed;
@@ -269,7 +297,7 @@ impl Game {
     }
 
     fn has_save_file(&self) -> bool {
-        // Verificar se existe pelo menos um save
+        
         for slot in 0..3 {
             let path = SaveData::get_save_path(slot);
             if SaveData::save_exists(&path) {
@@ -279,37 +307,42 @@ impl Game {
         false
     }
 
-    /// Verifica se o nome do jogador é o easter egg
+    
     fn is_easter_egg(&self) -> bool {
         self.player_name.to_lowercase() == "guicybercode"
     }
 
-    /// Inicia uma transição para outro estado
+    
     fn start_transition(&mut self, target_state: GameState) {
-        // Mudar estado imediatamente e aplicar efeito visual
-        self.state = target_state;
-        self.transition_timer = 0.001; // Iniciar com valor pequeno para ativar a transição
-        self.transition_alpha = 1.0; // Começar com tela preta (fade in)
-        self.transition_target_state = None; // Não precisamos mais armazenar
+        self.transition_timer = 0.001;
+        self.transition_alpha = 1.0;
+        self.transition_target_state = Some(target_state);
     }
 
-    /// Atualiza o sistema de transições
+    
     fn update_transition(&mut self, dt: f32) {
-        if self.transition_timer > 0.0 {
-            self.transition_timer += dt;
-            
-            if self.transition_timer < TRANSITION_DURATION {
-                // Fade in (tela preta vai sumindo)
-                self.transition_alpha = 1.0 - (self.transition_timer / TRANSITION_DURATION).min(1.0);
-            } else {
-                // Transição completa
+        if self.transition_target_state.is_none() {
+            if self.transition_timer > 0.0 {
                 self.transition_timer = 0.0;
                 self.transition_alpha = 0.0;
             }
+            return;
+        }
+
+        self.transition_timer += dt;
+        let progress = (self.transition_timer / TRANSITION_DURATION).min(1.0);
+        self.transition_alpha = 1.0 - progress;
+
+        if progress >= 1.0 {
+            if let Some(target) = self.transition_target_state.take() {
+                self.state = target;
+            }
+            self.transition_timer = 0.0;
+            self.transition_alpha = 0.0;
         }
     }
 
-    /// Desenha overlay de transição
+    
     fn draw_transition(&self) {
         if self.transition_timer > 0.0 && self.transition_alpha > 0.0 {
             draw_rectangle(0.0, 0.0, screen_width(), screen_height(), 
@@ -317,7 +350,7 @@ impl Game {
         }
     }
 
-    /// Verifica se há saves novos
+    
     fn check_for_new_saves(&mut self) {
         let saves = SaveData::list_all_saves();
         let mut newest_timestamp = self.last_save_timestamp;
@@ -336,7 +369,7 @@ impl Game {
         }
     }
 
-    /// Retorna informações do nível (dificuldade e número de moedas) do cache
+    
     fn get_level_info(&self, level: usize) -> (String, usize, Color) {
         if level > 0 && level <= self.level_info_cache.len() {
             self.level_info_cache[level - 1].clone()
@@ -345,16 +378,17 @@ impl Game {
         }
     }
 
-    fn load_level(&mut self, level: usize, use_checkpoint: bool) {
+    fn load_level(&mut self, level: usize, use_checkpoint: bool, restored_time: Option<f32>, restored_coins: Option<u32>) {
         let platforms = create_level_platforms(level);
         let coins = create_level_coins(level);
         let total_coins = coins.len() as u32;
-        let mut enemies = create_level_enemies(level);
+        let textures = if self.enemy_textures.is_empty() { None } else { Some(self.enemy_textures.as_slice()) };
+        let mut enemies = create_level_enemies(level, textures);
         let mut checkpoints = create_level_checkpoints(level);
         
-        // Se estiver usando checkpoint e houver um checkpoint salvo, restaurar estados dos checkpoints
+        
         if use_checkpoint && self.last_checkpoint_pos.is_some() {
-            // Restaurar estados dos checkpoints (marcar como ativados os que estão antes do checkpoint salvo)
+            
             if let Some((checkpoint_x, _)) = self.last_checkpoint_pos {
                 for checkpoint in &mut checkpoints {
                     if checkpoint.x <= checkpoint_x {
@@ -364,49 +398,49 @@ impl Game {
             }
         }
         
-        // Ajustar posições dos inimigos para ficarem sobre plataformas
-        // Lógica simplificada: encontrar a plataforma mais alta abaixo do inimigo
+        
+        
         for enemy in &mut enemies {
             let enemy_center_x = enemy.x + enemy.width / 2.0;
-            let mut best_platform_y = GROUND_Y; // Chão padrão
+            let mut best_platform_y = GROUND_Y; 
             let mut found_platform = false;
             
-            // Uma única passagem: encontrar a plataforma mais alta que suporta o inimigo
+            
             for platform in &platforms {
-                // Verificar se o centro do inimigo está sobre esta plataforma (horizontalmente)
+                
                 if enemy_center_x >= platform.x 
                     && enemy_center_x <= platform.x + platform.width
-                    && platform.y <= best_platform_y // Plataforma mais alta (menor Y)
+                    && platform.y <= best_platform_y 
                 {
                     best_platform_y = platform.y;
                     found_platform = true;
                 }
             }
             
-            // Posicionar inimigo em cima da plataforma encontrada ou no chão
+            
             enemy.y = best_platform_y - enemy.height;
             enemy.on_ground = true;
             
-            // Validação final: garantir que está realmente sobre uma plataforma ou no chão
-            // Se não encontrou plataforma, garantir que está no chão
+            
+            
             if !found_platform {
                 enemy.y = GROUND_Y - enemy.height;
             }
         }
         
-        // Posicionar player
+        
         let (player_start_x, player_start_y) = if let (true, Some((checkpoint_x, _))) = (use_checkpoint, self.last_checkpoint_pos) {
-            // Usar posição do checkpoint - jogador fica ao lado do checkpoint, no chão
-            (checkpoint_x + 50.0, GROUND_Y - PLAYER_HEIGHT) // Ao lado do checkpoint, no chão
+            
+            (checkpoint_x + 50.0, GROUND_Y - PLAYER_HEIGHT) 
         } else {
-            // Posição inicial padrão
+            
             (50.0, GROUND_Y - PLAYER_HEIGHT)
         };
         
         let mut player = Player::new(player_start_x, player_start_y, self.player_sprite_texture_p1.as_ref().map(|t| std::rc::Rc::clone(t)), self.player_sprite_texture_p2.as_ref().map(|t| std::rc::Rc::clone(t)));
-        // Garantir que o player comece no chão
+        
         player.on_ground = true;
-        player.vel_y = 0.0; // Garantir que não tem velocidade vertical inicial
+        player.vel_y = 0.0; 
         
         self.player = player;
         self.enemies = enemies;
@@ -414,27 +448,33 @@ impl Game {
         self.coins = coins;
         self.checkpoints = checkpoints;
         self.camera = Camera::new();
-        self.coins_collected = 0;
+        self.coins_collected = restored_coins.unwrap_or(0).min(total_coins);
         self.total_coins = total_coins;
         self.current_level = level;
-        // Resetar tempo ao carregar nível (300 segundos = 5 minutos)
-        self.time_remaining = TIME_LIMIT;
-        // Resetar timer de passos
+        self.time_remaining = restored_time.unwrap_or(TIME_LIMIT);
         self.footstep_timer = 0.0;
-        // Iniciar fadein ao carregar level
-        self.level_start_fade_timer = 1.5; // 1.5 segundos de fadein
-        // Não resetar vidas ao carregar level (mantém vidas do save)
+        if self.coins_collected > 0 {
+            let mut remaining = self.coins_collected;
+            for coin in &mut self.coins {
+                if remaining == 0 {
+                    break;
+                }
+                coin.collected = true;
+                remaining -= 1;
+            }
+        }
+        self.level_start_fade_timer = 1.5;
     }
 
     fn load_versus_map(&mut self) {
-        // Criar mapa limpo para versus (preto e branco, com plataformas)
+        
         let mut platforms = Vec::new();
         let screen_w = SCREEN_WIDTH as f32;
         
-        // Chão principal
+        
         platforms.push(Platform::new(0.0, GROUND_Y, screen_w, 50.0));
         
-        // Plataformas horizontais em diferentes alturas (mapa limpo e simétrico)
+        
         platforms.push(Platform::new(100.0, 450.0, 150.0, 20.0));
         platforms.push(Platform::new(screen_w - 250.0, 450.0, 150.0, 20.0));
         
@@ -444,32 +484,32 @@ impl Game {
         platforms.push(Platform::new(150.0, 250.0, 100.0, 20.0));
         platforms.push(Platform::new(screen_w - 250.0, 250.0, 100.0, 20.0));
         
-        platforms.push(Platform::new(screen_w / 2.0 - 50.0, 400.0, 100.0, 20.0)); // Plataforma central
+        platforms.push(Platform::new(screen_w / 2.0 - 50.0, 400.0, 100.0, 20.0)); 
         
-        // Plataformas verticais (canos) nas laterais
+        
         platforms.push(Platform::new(50.0, 500.0, 40.0, 50.0));
         platforms.push(Platform::new(screen_w - 90.0, 500.0, 40.0, 50.0));
         
         self.versus_platforms = platforms;
         
-        // Posicionar players em lados opostos, garantindo que estejam no chão
-        // P1 à esquerda
+        
+        
         self.player = Player::new(100.0, GROUND_Y - PLAYER_HEIGHT, self.player_sprite_texture_p1.as_ref().map(|t| std::rc::Rc::clone(t)), self.player_sprite_texture_p2.as_ref().map(|t| std::rc::Rc::clone(t)));
         self.player.on_ground = true;
         self.player.vel_y = 0.0;
-        // Garantir que está exatamente no chão
+        
         self.player.y = GROUND_Y - PLAYER_HEIGHT;
         
-        // P2 à direita
+        
         self.player2 = Some(Player::new(screen_w - 100.0 - PLAYER_WIDTH, GROUND_Y - PLAYER_HEIGHT, self.player_sprite_texture_p1.as_ref().map(|t| std::rc::Rc::clone(t)), self.player_sprite_texture_p2.as_ref().map(|t| std::rc::Rc::clone(t))));
         if let Some(ref mut p2) = self.player2 {
             p2.on_ground = true;
             p2.vel_y = 0.0;
-            // Garantir que está exatamente no chão (mesma altura do P1)
+            
             p2.y = GROUND_Y - PLAYER_HEIGHT;
         }
         
-        // Resetar pontuações, streaks e timers
+        
         self.player1_score = 0;
         self.player2_score = 0;
         self.player1_streak = 0;
@@ -478,15 +518,15 @@ impl Game {
         self.player2_points = 0;
         self.respawn_timer_p1 = 0.0;
         self.respawn_timer_p2 = 0.0;
-        self.versus_time_remaining = 600.0; // 10 minutos
+        self.versus_time_remaining = 600.0; 
         self.camera = Camera::new();
     }
 
-    // ============================================================================
-    // HELPERS: Funções auxiliares para otimização e redução de duplicação
-    // ============================================================================
+    
+    
+    
 
-    /// Helper: Verifica se dois retângulos estão próximos o suficiente para colisão
+    
     #[inline]
     fn is_nearby_for_collision(
         x1: f32, y1: f32, w1: f32, h1: f32,
@@ -499,7 +539,7 @@ impl Game {
             && y2 <= y1 + h1 + margin
     }
 
-    /// Helper: Processa colisões entre player e plataformas
+    
     fn check_player_platform_collisions(
         player: &mut Player,
         platforms: &[Platform],
@@ -517,7 +557,7 @@ impl Game {
         }
     }
 
-    /// Helper: Processa colisões entre inimigo e plataformas
+    
     fn check_enemy_platform_collisions(
         enemy: &mut Enemy,
         platforms: &[Platform]
@@ -533,16 +573,17 @@ impl Game {
         }
     }
 
-    /// Helper: Calcula pontos no modo versus baseado em streak
+    
     fn calculate_versus_points(streak: u32) -> u32 {
-        if streak > 0 {
-            200 * (1 << (streak - 1))
-        } else {
-            200
+        if streak == 0 {
+            return 200;
         }
+        let exp = streak.saturating_sub(1).min(10);
+        let multiplier = 1u32.checked_shl(exp).unwrap_or(u32::MAX);
+        200u32.saturating_mul(multiplier)
     }
 
-    /// Helper: Verifica se player está sobre uma plataforma
+    
     fn is_player_on_platform(
         player_x: f32,
         player_y: f32,
@@ -561,22 +602,22 @@ impl Game {
         None
     }
 
-    /// Helper: Garante que player está no chão ou sobre plataforma
+    
     fn ensure_player_grounded(player: &mut Player, platforms: &[Platform]) {
         if player.on_ground && player.vel_y == 0.0 {
             let (px, py, pw, _ph) = player.get_rect();
             if let Some(platform_y) = Self::is_player_on_platform(px, py, pw, platforms) {
-                // Está sobre plataforma - garantir que está exatamente em cima
+                
                 player.y = platform_y - PLAYER_HEIGHT;
             } else {
-                // Não está sobre plataforma - colocar no chão
+                
                 player.y = GROUND_Y - PLAYER_HEIGHT;
             }
         }
     }
 
-    /// Helper: Atualiza um player no modo versus
-    /// Retorna true se o player pulou
+    
+    
     fn update_versus_player_physics(
         player: &mut Player,
         left: bool,
@@ -585,33 +626,36 @@ impl Game {
         platforms: &[Platform],
         dt: f32,
     ) -> bool {
-        // Movimento
+        
         player.handle_movement_custom(left, right);
         player.update(dt);
         
-        // Colisões com plataformas
+        
         let (px, py, pw, ph) = player.get_rect();
         Self::check_player_platform_collisions(player, platforms, (px, py, pw, ph));
         
-        // Garantir que está no chão ou sobre plataforma
+        
         Self::ensure_player_grounded(player, platforms);
         
-        // Atualizar animação
+        
         player.update_animation(dt);
         
-        // Pulo
+        
         player.handle_jump_custom(jump)
     }
 
     pub fn update(&mut self, dt: f32) {
-        // ========================================================================
-        // ATUALIZAÇÃO GERAL: Transições e verificações globais
-        // ========================================================================
         
-        // Atualizar sistema de transições
+        
+        
+        
+        
         self.update_transition(dt);
+        if self.transition_target_state.is_some() {
+            return;
+        }
         
-        // Verificar saves novos no menu (apenas a cada 2 segundos, não a cada frame)
+        
         if matches!(self.state, GameState::Menu) {
             self.save_check_timer += dt;
             if self.save_check_timer >= 2.0 {
@@ -622,87 +666,87 @@ impl Game {
             self.save_check_timer = 0.0;
         }
         
-        // ========================================================================
-        // MÁQUINA DE ESTADOS: Processar lógica específica de cada estado
-        // ========================================================================
+        
+        
+        
         
         match self.state {
             GameState::Menu => {
-                // Atualizar animação de seleção
+                
                 self.menu_animation_time += dt * MENU_ANIMATION_SPEED;
                 
-                // Navegação no menu
+                
                 if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
                     if self.menu_selection > 0 {
                         self.menu_selection -= 1;
-                        self.menu_animation_time = 0.0; // Resetar animação ao mudar seleção
+                        self.menu_animation_time = 0.0; 
                         self.audio.play_menu_select();
                     }
                 }
                 if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
-                    if self.menu_selection < 5 { // 6 opções: Continue, Play, Versus, Settings, Credits, Exit
+                    if self.menu_selection < 5 { 
                         self.menu_selection += 1;
-                        self.menu_animation_time = 0.0; // Resetar animação ao mudar seleção
+                        self.menu_animation_time = 0.0; 
                         self.audio.play_menu_select();
                     }
                 }
                 
-                // Selecionar opção
+                
                 if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
                     self.audio.play_menu_select();
                     
                     match self.menu_selection {
                         0 => {
-                            // Continue - ir para menu de continue
-                            self.has_new_save = false; // Resetar indicador ao entrar
+                            
+                            self.has_new_save = false; 
                             self.start_transition(GameState::ContinueMenu);
                             self.continue_selection = 0;
                             self.continue_mode = ContinueMode::View;
                         }
                         1 => {
-                            // Play - ir para entrada de nome
+                            
                             self.start_transition(GameState::NameInput);
                             self.name_input.clear();
                             self.name_input_error = None;
                         }
                         2 => {
-                            // Versus - iniciar modo versus
+                            
                             self.versus_played = true;
                             self.load_versus_map();
                             self.start_transition(GameState::Versus);
                         }
                         3 => {
-                            // Configurações
+                            
                             self.state = GameState::Settings;
                             self.settings_selection = 0;
                         }
                         4 => {
-                            // Créditos
+                            
                             self.state = GameState::Credits;
                         }
                         5 => {
-                            // Sair - pedir confirmação
+                            
                             self.state = GameState::MenuExitConfirm;
-                            self.menu_selection = 0; // Resetar seleção para "SIM"
+                            self.menu_selection = 0; 
                         }
                         _ => {}
                     }
                 }
             }
             GameState::MenuExitConfirm => {
-                // Confirmação para sair
+                
                 if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
-                    // Confirmar saída
+                    
                     std::process::exit(0);
                 }
                 if is_key_pressed(KeyCode::Escape) || is_key_pressed(KeyCode::Backspace) {
-                    // Cancelar - voltar ao menu
+                    
                     self.audio.play_menu_select();
                     self.state = GameState::Menu;
                 }
             }
             GameState::NameInput => {
-                // Capturar caracteres digitados
+                
                 if let Some(ch) = get_char_pressed() {
                     if ch.is_alphanumeric() || ch == ' ' || ch == '-' || ch == '_' {
                         if self.name_input.len() < 20 {
@@ -712,13 +756,13 @@ impl Game {
                     }
                 }
                 
-                // Backspace para apagar
+                
                 if is_key_pressed(KeyCode::Backspace) {
                     self.name_input.pop();
                     self.name_input_error = None;
                 }
                 
-                // Validar nome em tempo real
+                
                 let (is_valid, error_msg) = name_filter::is_name_valid(&self.name_input);
                 if !is_valid && !self.name_input.is_empty() {
                     self.name_input_error = error_msg;
@@ -726,12 +770,12 @@ impl Game {
                     self.name_input_error = None;
                 }
                 
-                // ENTER para confirmar (se válido)
+                
                 if is_key_pressed(KeyCode::Enter) {
                     let (is_valid, _) = name_filter::is_name_valid(&self.name_input);
                     if is_valid {
                         self.player_name = self.name_input.clone();
-                        // Easter egg: se o nome for "guicybercode", começar com 15 vidas
+                        
                         if self.player_name.to_lowercase() == "guicybercode" {
                             self.lives = 15;
                         }
@@ -740,7 +784,7 @@ impl Game {
                     }
                 }
                 
-                // ESC para cancelar
+                
                 if is_key_pressed(KeyCode::Escape) {
                     self.name_input.clear();
                     self.name_input_error = None;
@@ -749,7 +793,7 @@ impl Game {
             }
             GameState::ContinueMenu => {
                 if self.continue_mode == ContinueMode::View {
-                    // Navegação entre slots
+                    
                     if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
                         if self.continue_selection > 0 {
                             self.continue_selection -= 1;
@@ -763,21 +807,21 @@ impl Game {
                         }
                     }
                     
-                    // ENTER para carregar save
+                    
                     if is_key_pressed(KeyCode::Enter) {
-                        // Verificar apenas quando necessário (não a cada frame)
+                        
                         let path = SaveData::get_save_path(self.continue_selection);
                         if SaveData::save_exists(&path) {
                             if let Err(e) = self.load_game(self.continue_selection) {
                                 eprintln!("Erro ao carregar save: {}", e);
                             } else {
-                                self.load_level(self.current_level, self.last_checkpoint_pos.is_some());
+                                self.load_level(self.current_level, self.last_checkpoint_pos.is_some(), Some(self.time_remaining), Some(self.coins_collected));
                                 self.start_transition(GameState::Playing);
                             }
                         }
                     }
                     
-                    // DELETE/BACKSPACE para apagar save
+                    
                     if is_key_pressed(KeyCode::Delete) || is_key_pressed(KeyCode::Backspace) {
                         let path = SaveData::get_save_path(self.continue_selection);
                         if SaveData::save_exists(&path) {
@@ -785,27 +829,27 @@ impl Game {
                         }
                     }
                     
-                    // ESC para voltar ao menu
+                    
                     if is_key_pressed(KeyCode::Escape) {
                         self.state = GameState::Menu;
                     }
                 } else {
-                    // Modo DeleteConfirm
+                    
                     if is_key_pressed(KeyCode::Y) {
-                        // Confirmar apagar
+                        
                         if let Err(e) = SaveData::delete_save(self.continue_selection) {
                             eprintln!("Erro ao apagar save: {}", e);
                         }
                         self.continue_mode = ContinueMode::View;
                     }
                     if is_key_pressed(KeyCode::N) || is_key_pressed(KeyCode::Escape) {
-                        // Cancelar
+                        
                         self.continue_mode = ContinueMode::View;
                     }
                 }
             }
             GameState::Settings => {
-                // Navegação nas configurações
+                
                 if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
                     if self.settings_selection > 0 {
                         self.settings_selection -= 1;
@@ -813,23 +857,23 @@ impl Game {
                     }
                 }
                 if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
-                    if self.settings_selection < 3 { // 4 opções: Som, Resolução, Controles, Voltar
+                    if self.settings_selection < 3 { 
                         self.settings_selection += 1;
                         self.audio.play_menu_select();
                     }
                 }
                 
-                // Ajustar valores com esquerda/direita
+                
                 if is_key_pressed(KeyCode::Left) || is_key_pressed(KeyCode::A) {
                     match self.settings_selection {
                         0 => {
-                            // Toggle som
+                            
                             self.sound_enabled = !self.sound_enabled;
                             self.audio.set_enabled(self.sound_enabled);
                             self.audio.play_menu_select();
                         }
                         1 => {
-                            // Previous resolution
+                            
                             if self.resolution_index > 0 {
                                 self.resolution_index -= 1;
                                 self.apply_resolution();
@@ -842,13 +886,13 @@ impl Game {
                 if is_key_pressed(KeyCode::Right) || is_key_pressed(KeyCode::D) {
                     match self.settings_selection {
                         0 => {
-                            // Toggle som
+                            
                             self.sound_enabled = !self.sound_enabled;
                             self.audio.set_enabled(self.sound_enabled);
                             self.audio.play_menu_select();
                         }
                         1 => {
-                            // Next resolution
+                            
                             if self.resolution_index < RESOLUTIONS.len() - 1 {
                                 self.resolution_index += 1;
                                 self.apply_resolution();
@@ -859,24 +903,24 @@ impl Game {
                     }
                 }
                 
-                // Selecionar opção
+                
                 if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
                     match self.settings_selection {
                         0 => {
-                            // Toggle som
+                            
                             self.sound_enabled = !self.sound_enabled;
                             self.audio.set_enabled(self.sound_enabled);
                             self.audio.play_menu_select();
                         }
                         3 => {
-                            // Voltar
+                            
                             self.audio.play_menu_select();
                             if self.came_from_pause {
-                                // Voltar para o jogo pausado
+                                
                                 self.came_from_pause = false;
                                 self.state = GameState::Pause;
                             } else {
-                                // Voltar para o menu principal
+                                
                                 self.state = GameState::Menu;
                                 self.menu_selection = 0;
                             }
@@ -885,36 +929,36 @@ impl Game {
                     }
                 }
                 
-                // ESC para voltar
+                
                 if is_key_pressed(KeyCode::Escape) {
                     self.audio.play_menu_select();
                     if self.came_from_pause {
-                        // Voltar para o jogo pausado
+                        
                         self.came_from_pause = false;
                         self.state = GameState::Pause;
                     } else {
-                        // Voltar para o menu principal
+                        
                         self.state = GameState::Menu;
                         self.menu_selection = 0;
                     }
                 }
             }
             GameState::Credits => {
-                // Voltar ao menu ou ao jogo pausado
+                
                 if is_key_pressed(KeyCode::Escape) || is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
                     if self.came_from_pause {
-                        // Voltar para o jogo pausado
+                        
                         self.came_from_pause = false;
                         self.state = GameState::Pause;
                     } else {
-                        // Voltar para o menu principal
+                        
                         self.state = GameState::Menu;
                         self.menu_selection = 0;
                     }
                 }
             }
             GameState::Tutorial => {
-                // Navegação entre páginas
+                
                 if is_key_pressed(KeyCode::Left) || is_key_pressed(KeyCode::A) {
                     if self.tutorial_page > 0 {
                         self.tutorial_page -= 1;
@@ -928,29 +972,29 @@ impl Game {
                     }
                 }
                 
-                // ENTER/SPACE para pular tutorial ou avançar
+                
                 if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
                     if self.tutorial_page == TUTORIAL_PAGE_COUNT - 1 {
-                        // Última página - completar tutorial
+                        
                         self.tutorial_completed = true;
                         self.start_transition(GameState::LevelSelect);
                     } else {
-                        // Avançar para próxima página
+                        
                         if self.tutorial_page < TUTORIAL_PAGE_COUNT - 1 {
                             self.tutorial_page += 1;
                         }
                     }
                 }
                 
-                // ESC para voltar ao menu ou pular tutorial
+                
                 if is_key_pressed(KeyCode::Escape) {
                     self.start_transition(GameState::LevelSelect);
                 }
             }
             GameState::LevelSelect => {
-                // Navegação no seletor de fases (pula fases bloqueadas)
+                
                 if is_key_pressed(KeyCode::Left) || is_key_pressed(KeyCode::A) {
-                    // Encontrar próxima fase desbloqueada à esquerda
+                    
                     for i in (0..self.level_selection).rev() {
                         if self.unlocked_levels[i] {
                             self.level_selection = i;
@@ -959,8 +1003,8 @@ impl Game {
                     }
                 }
                 if is_key_pressed(KeyCode::Right) || is_key_pressed(KeyCode::D) {
-                    // Encontrar próxima fase desbloqueada à direita
-                    for i in (self.level_selection + 1)..4 {
+                    
+                    for i in (self.level_selection + 1)..self.unlocked_levels.len() {
                         if self.unlocked_levels[i] {
                             self.level_selection = i;
                             break;
@@ -968,244 +1012,244 @@ impl Game {
                     }
                 }
                 
-                // Selecionar fase (apenas se desbloqueada)
+                
                 if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
                     if self.level_selection < self.unlocked_levels.len() 
                         && self.unlocked_levels[self.level_selection] 
                     {
-                        // Se for nível 1 e tutorial não foi completado, oferecer tutorial
+                        
                         if self.level_selection == 0 && !self.tutorial_completed {
                             self.start_transition(GameState::Tutorial);
                         } else {
-                            self.last_checkpoint_pos = None; // Resetar checkpoint ao iniciar novo nível
-                            self.load_level(self.level_selection + 1, false);
-                            self.score = 0; // Resetar pontuação ao iniciar novo nível
+                            self.last_checkpoint_pos = None; 
+                            self.load_level(self.level_selection + 1, false, None, None);
+                            self.score = 0;
                             self.start_transition(GameState::Playing);
                         }
                     }
                 }
                 
-                // Voltar ao menu
+                
                 if is_key_pressed(KeyCode::Escape) {
                     self.state = GameState::Menu;
                     self.menu_selection = 0;
                 }
             }
             GameState::Playing => {
-                // --- Controles e UI ---
-                // Verificar se quer pausar (P)
+                
+                
                 if is_key_pressed(KeyCode::P) {
                     self.state = GameState::Pause;
                     self.pause_selection = 0;
-                    self.came_from_pause = false; // Resetar flag
-                    return; // Não atualizar o jogo quando pausar
+                    self.came_from_pause = false; 
+                    return; 
                 }
                 
-                // Verificar se quer voltar ao menu (ESC)
+                
                 if is_key_pressed(KeyCode::Escape) {
                     self.state = GameState::Menu;
                     self.menu_selection = 0;
                     return;
                 }
                 
-                // --- Transições e Timers ---
-                // Atualizar fadein ao iniciar fase
+                
+                
                 if self.level_start_fade_timer > 0.0 {
                     self.level_start_fade_timer -= dt;
                 }
                 
-                // Atualizar contador de tempo
+                
                 self.time_remaining -= dt;
                 
-                // Verificar se o tempo acabou
+                
                 if self.time_remaining <= 0.0 {
                     self.time_remaining = 0.0;
                     self.audio.play_death();
                     self.state = GameState::GameOver;
-                    return; // Sair do update para não processar mais nada
+                    return; 
                 }
                 
-                // --- Física do Jogador ---
-                // Processar movimento horizontal primeiro
+                
+                
                 self.player.handle_movement();
                 
-                // Atualizar física do jogador
+                
                 self.player.update(dt);
                 
-                // Cache do retângulo do jogador (evitar múltiplas chamadas)
+                
                 let (px, py, pw, ph) = self.player.get_rect();
                 
-                // --- Interações do Jogador ---
-                // Verificar checkpoints
+                
+                
                 for checkpoint in &mut self.checkpoints {
                     if checkpoint.check_activation(px, py, pw, ph) {
-                        // Novo checkpoint ativado - salvar posição
+                        
                         self.last_checkpoint_pos = Some((checkpoint.x, checkpoint.y));
-                        self.score += SCORE_CHECKPOINT; // Adicionar pontos
-                        self.audio.play_coin(); // Usar som de moeda como feedback
+                        self.score += SCORE_CHECKPOINT; 
+                        self.audio.play_coin(); 
                     }
                 }
                 
-                // Verificar colisões jogador-plataforma (ANTES do pulo para garantir on_ground correto)
+                
                 Self::check_player_platform_collisions(&mut self.player, &self.platforms, (px, py, pw, ph));
                 
-                // Processar pulo DEPOIS das colisões (para usar on_ground atualizado)
+                
                 let jumped = self.player.handle_jump();
                 
-                // Tocar som de pulo
+                
                 if jumped {
                     self.audio.play_jump(self.is_easter_egg());
                 }
                 
-                // Atualizar animação DEPOIS das colisões (para usar on_ground correto)
+                
                 self.player.update_animation(dt);
                 
-                // Tocar som de passos quando estiver andando no chão
-                const FOOTSTEP_INTERVAL: f32 = 0.25; // Intervalo entre passos (em segundos)
+                
+                const FOOTSTEP_INTERVAL: f32 = 0.25; 
                 if self.player.on_ground && self.player.vel_x.abs() > 10.0 {
-                    // Personagem está no chão e se movendo
+                    
                     self.footstep_timer += dt;
                     if self.footstep_timer >= FOOTSTEP_INTERVAL {
                         self.audio.play_footstep(self.is_easter_egg());
-                        self.footstep_timer = 0.0; // Resetar timer
+                        self.footstep_timer = 0.0; 
                     }
                 } else {
-                    // Resetar timer quando não está andando
+                    
                     self.footstep_timer = 0.0;
                 }
                 
-                // --- Limites do Mundo ---
-                // Verificar colisão com paredes invisíveis (bordas laterais do mundo)
+                
+                
                 let player_left = self.player.x;
                 let player_right = self.player.x + self.player.width;
                 
-                // Parede esquerda do mundo
+                
                 if player_left < 0.0 {
                     self.player.x = 0.0;
                     self.player.vel_x = 0.0;
                 }
-                // Parede direita do mundo
+                
                 if player_right > WORLD_WIDTH {
                     self.player.x = WORLD_WIDTH - self.player.width;
                     self.player.vel_x = 0.0;
                 }
                 
-                // Verificar se caiu do mapa (morte por queda)
+                
                 if self.player.y > FALL_DEATH_Y {
                     self.audio.play_death();
-                    // Perder uma vida
+                    
                     if self.lives > 0 {
                         self.lives -= 1;
                     }
-                    // Se não tem mais vidas, game over com fadeout
+                    
                     if self.lives == 0 {
-                        self.game_over_fade_timer = 2.0; // 2 segundos de fadeout
+                        self.game_over_fade_timer = 2.0; 
                         self.state = GameState::GameOver;
                     } else {
-                        // Iniciar tela de respawn
-                        self.respawn_timer = 3.0; // 3 segundos de respawn
+                        
+                        self.respawn_timer = 3.0; 
                         self.state = GameState::Respawn;
                     }
                 }
                 
-                // --- Atualização de Inimigos ---
+                
                 for enemy in &mut self.enemies {
                     if !enemy.alive {
-                        continue; // Pular inimigos mortos
+                        continue; 
                     }
                     
                     enemy.update(dt);
                     
-                    // Colisão inimigo-plataforma
+                    
                     Self::check_enemy_platform_collisions(enemy, &self.platforms);
                     
-                    // Verificar bordas para não cair das plataformas (só se estiver no chão)
+                    
                     if enemy.on_ground {
                         enemy.check_edge(&self.platforms);
                     }
                     
-                    // Colisão inimigo-chão
+                    
                     enemy.check_ground_collision(GROUND_Y);
                     
-                    // Colisão jogador-inimigo (usar cache)
+                    
                     match enemy.check_player_collision(px, py, pw, ph, self.player.vel_y) {
                         Some(true) => {
-                            // Jogador morreu
+                            
                             self.audio.play_death();
-                            // Perder uma vida
+                            
                             if self.lives > 0 {
                                 self.lives -= 1;
                             }
-                            // Se não tem mais vidas, game over com fadeout
+                            
                             if self.lives == 0 {
-                                self.game_over_fade_timer = 2.0; // 2 segundos de fadeout
+                                self.game_over_fade_timer = 2.0; 
                                 self.state = GameState::GameOver;
                             } else {
-                                // Iniciar tela de respawn
-                                self.respawn_timer = 3.0; // 3 segundos de respawn
+                                
+                                self.respawn_timer = 3.0; 
                                 self.state = GameState::Respawn;
                             }
-                            break; // Sair do loop se morreu
+                            break; 
                         }
                         Some(false) => {
-                            // Inimigo morreu - jogador quica
+                            
                             self.audio.play_enemy_death();
-                            self.score += SCORE_ENEMY; // Adicionar pontos por matar inimigo
-                            self.player.vel_y = JUMP_FORCE * 0.6; // Quique menor que pulo normal
+                            self.score += SCORE_ENEMY; 
+                            self.player.vel_y = JUMP_FORCE * 0.6; 
                         }
                         None => {
-                            // Sem colisão
+                            
                         }
                     }
                 }
                 
-                // --- Atualização de Moedas ---
-                // Otimizado: só verificar moedas não coletadas
+                
+                
                 for coin in &mut self.coins {
                     if coin.collected {
-                        continue; // Pular moedas já coletadas
+                        continue; 
                     }
                     
                     coin.update(dt);
                     if coin.check_collection(px, py, pw, ph) {
                         self.coins_collected += 1;
-                        self.score += SCORE_COIN; // Adicionar pontos por moeda
+                        self.score += SCORE_COIN; 
                         self.audio.play_coin();
                     }
                 }
                 
-                // --- Verificação de Conclusão de Fase ---
-                // Verificar se completou a fase (chegou ao final ou coletou todas as moedas)
+                
+                
                 if self.player.x > LEVEL_COMPLETE_X || self.coins_collected >= self.total_coins {
-                    // Calcular bônus de tempo (pontos por segundo restante)
+                    
                     let time_bonus = (self.time_remaining * SCORE_TIME_BONUS) as u32;
-                    self.score += SCORE_LEVEL_COMPLETE + time_bonus; // Pontos por completar + bônus de tempo
+                    self.score += SCORE_LEVEL_COMPLETE + time_bonus; 
                     
                     self.audio.play_level_complete();
-                    // Desbloquear próxima fase se existir
-                    if self.current_level < 4 && self.current_level < self.unlocked_levels.len() {
-                        self.unlocked_levels[self.current_level] = true; // Desbloquear próxima fase
+                    
+                    if self.current_level < MAX_LEVELS && self.current_level < self.unlocked_levels.len() {
+                        self.unlocked_levels[self.current_level] = true; 
                     }
-                    // Salvar progresso após completar level (usar slot 0 por padrão)
+                    
                     if let Err(e) = self.save_game(0) {
                         eprintln!("Erro ao salvar jogo: {}", e);
                     }
                     self.state = GameState::LevelComplete;
                 }
                 
-                // Atualizar câmera
+                
                 let screen_width = screen_width();
                 self.camera.update(self.player.x, screen_width);
             }
             GameState::LevelComplete => {
-                // Verificar se quer continuar
+                
                 if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
                     self.state = GameState::LevelSelect;
-                    // Selecionar próxima fase se desbloqueada, senão volta para a atual
-                    // current_level é 1-indexed, unlocked_levels é 0-indexed
-                    if self.current_level < 4 
-                        && self.current_level < self.unlocked_levels.len() 
-                        && self.unlocked_levels[self.current_level] 
+                    
+                    
+                    if self.current_level < MAX_LEVELS
+                        && self.current_level < self.unlocked_levels.len()
+                        && self.unlocked_levels[self.current_level]
                     {
                         self.level_selection = self.current_level;
                     } else if self.current_level > 0 {
@@ -1220,7 +1264,7 @@ impl Game {
                 }
             }
             GameState::Versus => {
-                // Verificar se quer voltar ao menu
+                
                 if is_key_pressed(KeyCode::Escape) {
                     self.state = GameState::Menu;
                     self.menu_selection = 0;
@@ -1228,26 +1272,26 @@ impl Game {
                     return;
                 }
                 
-                // Atualizar timer
+                
                 self.versus_time_remaining -= dt;
                 
-                // Verificar se o tempo acabou
+                
                 if self.versus_time_remaining <= 0.0 {
                     self.versus_time_remaining = 0.0;
-                    self.audio.play_level_complete(); // Som de fim de jogo
+                    self.audio.play_level_complete(); 
                     self.state = GameState::VersusEnd;
                     return;
                 }
                 
-                // Processar respawns
+                
                 if self.respawn_timer_p1 > 0.0 {
                     self.respawn_timer_p1 -= dt;
                     if self.respawn_timer_p1 <= 0.0 {
-                        // Respawnar player 1
+                        
                         self.player = Player::new(100.0, GROUND_Y - PLAYER_HEIGHT, self.player_sprite_texture_p1.as_ref().map(|t| std::rc::Rc::clone(t)), self.player_sprite_texture_p2.as_ref().map(|t| std::rc::Rc::clone(t)));
                         self.player.on_ground = true;
                         self.player.vel_y = 0.0;
-                        // Garantir que está exatamente no chão
+                        
                         self.player.y = GROUND_Y - PLAYER_HEIGHT;
                     }
                 }
@@ -1256,17 +1300,17 @@ impl Game {
                     self.respawn_timer_p2 -= dt;
                     if let Some(ref mut p2) = self.player2 {
                         if self.respawn_timer_p2 <= 0.0 {
-                            // Respawnar player 2
+                            
                             *p2 = Player::new(700.0, GROUND_Y - PLAYER_HEIGHT, self.player_sprite_texture_p1.as_ref().map(|t| std::rc::Rc::clone(t)), self.player_sprite_texture_p2.as_ref().map(|t| std::rc::Rc::clone(t)));
                             p2.on_ground = true;
                             p2.vel_y = 0.0;
-                            // Garantir que está exatamente no chão (mesma altura do P1)
+                            
                             p2.y = GROUND_Y - PLAYER_HEIGHT;
                         }
                     }
                 }
                 
-                // Atualizar player 1 (WASD) - apenas se não estiver em respawn
+                
                 if self.respawn_timer_p1 <= 0.0 {
                     let p1_left = is_key_down(KeyCode::A);
                     let p1_right = is_key_down(KeyCode::D);
@@ -1283,7 +1327,7 @@ impl Game {
                     if jumped {
                         self.audio.play_jump(use_easter_egg);
                     }
-                    // Som de passos
+                    
                     const FOOTSTEP_INTERVAL: f32 = 0.25;
                     if self.player.on_ground && self.player.vel_x.abs() > 10.0 {
                         self.footstep_timer += dt;
@@ -1296,13 +1340,13 @@ impl Game {
                     }
                 }
                 
-                // Atualizar player 2 (Setas) - apenas se não estiver em respawn
+                
                 if let Some(ref mut p2) = self.player2 {
                     if self.respawn_timer_p2 <= 0.0 {
                         let p2_left = is_key_down(KeyCode::Left);
                         let p2_right = is_key_down(KeyCode::Right);
                         let p2_jump = is_key_down(KeyCode::Up);
-                        // No modo versus, não há easter egg (só no single player)
+                        
                         let jumped = Self::update_versus_player_physics(
                             p2,
                             p2_left,
@@ -1315,121 +1359,121 @@ impl Game {
                             self.audio.play_jump(false);
                         }
                     } else {
-                        // Durante respawn, ainda atualizar física (mas não controles)
+                        
                         p2.update(dt);
                         let (px2, py2, pw2, ph2) = p2.get_rect();
                         Self::check_player_platform_collisions(p2, &self.versus_platforms, (px2, py2, pw2, ph2));
                     }
                 }
                 
-                // Atualizar player 1 durante respawn também
+                
                 if self.respawn_timer_p1 > 0.0 {
                     self.player.update(dt);
                     let (px, py, pw, ph) = self.player.get_rect();
                     Self::check_player_platform_collisions(&mut self.player, &self.versus_platforms, (px, py, pw, ph));
                 }
                 
-                // Verificar colisões entre players (morte por pulo)
+                
                 if self.respawn_timer_p1 <= 0.0 && self.respawn_timer_p2 <= 0.0 {
                     if let Some(ref mut p2) = self.player2 {
-                        // P1 pulou em cima de P2
+                        
                         if self.player.check_stomp(p2, self.player.vel_y) {
-                            // Incrementar kills
+                            
                             self.player1_score += 1;
-                            // Incrementar streak e resetar streak do P2
+                            
                             self.player1_streak += 1;
                             self.player2_streak = 0;
-                            // Calcular pontos usando helper
+                            
                             let points = Self::calculate_versus_points(self.player1_streak);
                             self.player1_points += points;
                             
-                            self.audio.play_enemy_death(); // Som de eliminação
-                            self.respawn_timer_p2 = 2.0; // 2 segundos de respawn
-                            // Dar um pequeno impulso para P1
+                            self.audio.play_enemy_death(); 
+                            self.respawn_timer_p2 = 2.0; 
+                            
                             self.player.vel_y = JUMP_FORCE * 0.6;
                         }
-                        // P2 pulou em cima de P1
+                        
                         else if p2.check_stomp(&self.player, p2.vel_y) {
-                            // Incrementar kills
+                            
                             self.player2_score += 1;
-                            // Incrementar streak e resetar streak do P1
+                            
                             self.player2_streak += 1;
                             self.player1_streak = 0;
-                            // Calcular pontos usando helper
+                            
                             let points = Self::calculate_versus_points(self.player2_streak);
                             self.player2_points += points;
                             
-                            self.audio.play_enemy_death(); // Som de eliminação
-                            self.respawn_timer_p1 = 2.0; // 2 segundos de respawn
-                            // Dar um pequeno impulso para P2
+                            self.audio.play_enemy_death(); 
+                            self.respawn_timer_p1 = 2.0; 
+                            
                             p2.vel_y = JUMP_FORCE * 0.6;
                         }
                     }
                 }
                 
-                // Verificar colisão com paredes invisíveis (bordas laterais) - P1
-                // Verificar colisão com paredes invisíveis (bordas laterais do mundo) - P1
+                
+                
                 let p1_left = self.player.x;
                 let p1_right = self.player.x + self.player.width;
                 
-                // Parede esquerda do mundo
+                
                 if p1_left < 0.0 {
                     self.player.x = 0.0;
                     self.player.vel_x = 0.0;
                 }
-                // Parede direita do mundo
+                
                 if p1_right > WORLD_WIDTH {
                     self.player.x = WORLD_WIDTH - self.player.width;
                     self.player.vel_x = 0.0;
                 }
                 
-                // Verificar colisão com paredes invisíveis - P2
+                
                 if let Some(ref mut p2) = self.player2 {
                     let p2_left = p2.x;
                     let p2_right = p2.x + p2.width;
                     
-                    // Parede esquerda do mundo
+                    
                     if p2_left < 0.0 {
                         p2.x = 0.0;
                         p2.vel_x = 0.0;
                     }
-                    // Parede direita do mundo
+                    
                     if p2_right > WORLD_WIDTH {
                         p2.x = WORLD_WIDTH - p2.width;
                         p2.vel_x = 0.0;
                     }
                 }
                 
-                // Verificar se caiu do mapa (morte por queda) - ambos os players
-                // P1 caiu - P2 ganha pontos
+                
+                
                 if self.player.y > FALL_DEATH_Y && self.respawn_timer_p1 <= 0.0 {
                     self.player2_score += 1;
                     self.player2_streak += 1;
-                    self.player1_streak = 0; // Resetar streak do P1
-                    // Calcular pontos usando helper
+                    self.player1_streak = 0; 
+                    
                     let points = Self::calculate_versus_points(self.player2_streak);
                     self.player2_points += points;
                     
-                    self.audio.play_enemy_death(); // Som de eliminação
+                    self.audio.play_enemy_death(); 
                     self.respawn_timer_p1 = 2.0;
                 }
                 
-                // P2 caiu - P1 ganha pontos
+                
                 if let Some(ref p2) = self.player2 {
                     if p2.y > FALL_DEATH_Y && self.respawn_timer_p2 <= 0.0 {
                         self.player1_score += 1;
                         self.player1_streak += 1;
-                        self.player2_streak = 0; // Resetar streak do P2
-                        // Calcular pontos usando helper
+                        self.player2_streak = 0; 
+                        
                         let points = Self::calculate_versus_points(self.player1_streak);
                         self.player1_points += points;
                         
-                        self.audio.play_enemy_death(); // Som de eliminação
+                        self.audio.play_enemy_death(); 
                         self.respawn_timer_p2 = 2.0;
                     }
                 }
                 
-                // Atualizar câmera para focar no centro entre os dois players
+                
                 if let Some(ref p2) = self.player2 {
                     let center_x = (self.player.x + p2.x) / 2.0;
                     let screen_width = screen_width();
@@ -1437,7 +1481,7 @@ impl Game {
                 }
             }
             GameState::VersusEnd => {
-                // Tela de resultados finais
+                
                 if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) || is_key_pressed(KeyCode::Escape) {
                     self.state = GameState::Menu;
                     self.menu_selection = 0;
@@ -1445,7 +1489,7 @@ impl Game {
                 }
             }
             GameState::Pause => {
-                // Navegação no menu de pausa
+                
                 if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
                     if self.pause_selection > 0 {
                         self.pause_selection -= 1;
@@ -1459,27 +1503,27 @@ impl Game {
                     }
                 }
                 
-                // Selecionar opção
+                
                 if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
                     self.audio.play_menu_select();
                     match self.pause_selection {
                         0 => {
-                            // Resume - voltar ao jogo
+                            
                             self.state = GameState::Playing;
                         }
                         1 => {
-                            // Settings - ir para configurações
+                            
                             self.came_from_pause = true;
                             self.state = GameState::Settings;
                             self.settings_selection = 0;
                         }
                         2 => {
-                            // Credits - ir para créditos
+                            
                             self.came_from_pause = true;
                             self.state = GameState::Credits;
                         }
                         3 => {
-                            // Main Menu - voltar ao menu principal
+                            
                             self.state = GameState::Menu;
                             self.menu_selection = 0;
                         }
@@ -1487,37 +1531,37 @@ impl Game {
                     }
                 }
                 
-                // P ou ESC para resumir
+                
                 if is_key_pressed(KeyCode::P) || is_key_pressed(KeyCode::Escape) {
                     self.state = GameState::Playing;
                 }
             }
             GameState::Respawn => {
-                // Atualizar timer de respawn
+                
                 self.respawn_timer -= dt;
                 
-                // Quando o timer acabar, renascer
+                
                 if self.respawn_timer <= 0.0 {
                     self.respawn_timer = 0.0;
-                    // Renascer no último checkpoint
-                    self.load_level(self.current_level, self.last_checkpoint_pos.is_some());
+                    
+                    self.load_level(self.current_level, self.last_checkpoint_pos.is_some(), Some(self.time_remaining), Some(self.coins_collected));
                     self.state = GameState::Playing;
                 }
             }
             GameState::GameOver => {
-                // Atualizar timer de fadeout (se ainda estiver fazendo fade)
+                
                 if self.game_over_fade_timer > 0.0 {
                     self.game_over_fade_timer -= dt;
                 }
                 
-                // Só permitir interação após o fadeout terminar
+                
                 if self.game_over_fade_timer <= 0.0 {
-                    // Verificar se quer reiniciar ou voltar ao menu
+                    
                     if is_key_pressed(KeyCode::Space) || is_key_pressed(KeyCode::Enter) {
-                        // Resetar vidas para 5 ao reiniciar
+                        
                         self.lives = 5;
-                        // Renascer no último checkpoint se houver, senão no início
-                        self.load_level(self.current_level, self.last_checkpoint_pos.is_some());
+                        
+                        self.load_level(self.current_level, self.last_checkpoint_pos.is_some(), None, None);
                         self.state = GameState::Playing;
                     }
                     if is_key_pressed(KeyCode::Escape) {
@@ -1529,16 +1573,132 @@ impl Game {
         }
     }
 
+    fn draw_level_world(&self) {
+        let screen_left = self.camera.x - COLLISION_MARGIN;
+        let screen_right = self.camera.x + screen_width() + COLLISION_MARGIN;
+        let screen_top = self.camera.y - COLLISION_MARGIN;
+        let screen_bottom = self.camera.y + screen_height() + COLLISION_MARGIN;
+
+        for platform in &self.platforms {
+            if platform.x + platform.width >= screen_left
+                && platform.x <= screen_right
+                && platform.y + platform.height >= screen_top
+                && platform.y <= screen_bottom
+            {
+                platform.draw(self.camera.x, self.camera.y);
+            }
+        }
+
+        for checkpoint in &self.checkpoints {
+            if checkpoint.x >= screen_left
+                && checkpoint.x <= screen_right
+                && checkpoint.y >= screen_top
+                && checkpoint.y <= screen_bottom
+            {
+                checkpoint.draw(self.camera.x, self.camera.y);
+            }
+        }
+
+        for coin in &self.coins {
+            if !coin.collected
+                && coin.x >= screen_left
+                && coin.x <= screen_right
+                && coin.y >= screen_top
+                && coin.y <= screen_bottom
+            {
+                coin.draw(self.camera.x, self.camera.y);
+            }
+        }
+
+        for enemy in &self.enemies {
+            if enemy.alive
+                && enemy.x >= screen_left
+                && enemy.x <= screen_right
+                && enemy.y >= screen_top
+                && enemy.y <= screen_bottom
+            {
+                enemy.draw(self.camera.x, self.camera.y);
+            }
+        }
+
+        self.player.draw(self.camera.x, self.camera.y);
+    }
+
+    fn draw_level_hud(&self, include_time_label: bool) {
+        let time_seconds = self.time_remaining as u32;
+        let time_text = if include_time_label {
+            format!("Time: {}s", time_seconds)
+        } else {
+            format!("{}", time_seconds)
+        };
+        let time_color = if self.time_remaining < TIME_WARNING_RED {
+            RED
+        } else if self.time_remaining < TIME_WARNING_YELLOW {
+            YELLOW
+        } else {
+            BLACK
+        };
+
+        let player_name_display = if self.player_name.is_empty() {
+            "Player"
+        } else {
+            &self.player_name
+        };
+        draw_text(
+            player_name_display,
+            10.0,
+            30.0,
+            24.0,
+            BLACK,
+        );
+
+        draw_text(
+            &format!("Level: {} | Coins: {}/{} | Time: {}s",
+                self.current_level, self.coins_collected, self.total_coins, time_seconds),
+            10.0,
+            60.0,
+            30.0,
+            BLACK,
+        );
+
+        let score_text = format!("Score: {}", self.score);
+        draw_text(
+            &score_text,
+            10.0,
+            100.0,
+            28.0,
+            BLACK,
+        );
+
+        let lives_text = format!("Lives: {}", self.lives);
+        draw_text(
+            &lives_text,
+            10.0,
+            130.0,
+            28.0,
+            if self.lives <= 1 { RED } else { BLACK },
+        );
+
+        let time_width = measure_text(&time_text, None, 40u16, 1.0).width;
+        draw_text(
+            &time_text,
+            screen_width() - time_width - 20.0,
+            40.0,
+            40.0,
+            time_color,
+        );
+    }
+
     pub fn draw(&self) {
         clear_background(WHITE);
         
         match self.state {
             GameState::Menu => {
-                // Título do jogo (maior e mais destacado)
+                
                 let title = "JUMP QUEST";
                 let title_width = measure_text(title, None, MENU_TITLE_SIZE as u16, 1.0).width;
                 let title_color = if self.is_easter_egg() {
-                    // Cor dourada para easter egg com brilho
+                    
                     let time = get_time() as f32;
                     let glow = (time * 2.0).sin() * 0.2 + 0.8;
                     Color::new(0.85 * glow, 0.65 * glow, 0.13 * glow, 1.0)
@@ -1553,7 +1713,7 @@ impl Game {
                     title_color,
                 );
                 
-                // Menu options with better spacing
+                
                 let menu_options = vec!["CONTINUE", "PLAY", "VERSUS", "SETTINGS", "CREDITS", "EXIT"];
                 let start_y = screen_height() / 2.0 - 40.0;
                 
@@ -1562,22 +1722,22 @@ impl Game {
                     let x = screen_width() / 2.0 - option_width / 2.0;
                     let y = start_y + (i as f32 * MENU_OPTION_SPACING);
                     
-                    // Destacar opção selecionada
+                    
                     let color = if i == self.menu_selection {
                         BLACK
                     } else {
                         DARKGRAY
                     };
                     
-                    // Efeito especial para easter egg no título
+                    
                     let title_color = if self.is_easter_egg() {
-                        // Cor dourada para easter egg
+                        
                         Color::new(0.85, 0.65, 0.13, 1.0)
                     } else {
                         BLACK
                     };
                     
-                    // Atualizar cor do título se for easter egg
+                    
                     if i == 0 && self.is_easter_egg() {
                         draw_text(
                             title,
@@ -1588,18 +1748,18 @@ impl Game {
                         );
                     }
                     
-                    // Indicador de seleção com animação (piscar)
+                    
                     if i == self.menu_selection {
-                        // Animação: piscar baseado em seno (garantir que o tempo está sendo atualizado)
-                        // Usar módulo para evitar overflow e manter animação suave
+                        
+                        
                         let anim_time = self.menu_animation_time % (2.0 * std::f32::consts::PI);
                         let alpha = (anim_time.sin() * 0.4 + 0.6).clamp(0.3, 1.0);
                         let indicator_color = Color::new(0.0, 0.0, 0.0, alpha);
                         
-                        // Desenhar indicador animado
+                        
                         draw_text(">", x - MENU_INDICATOR_OFFSET, y, MENU_OPTION_SIZE, indicator_color);
                         
-                        // Optional: draw highlight line below selected option
+                        
                         draw_line(
                             x - 10.0,
                             y + 8.0,
@@ -1612,25 +1772,25 @@ impl Game {
                     
                     draw_text(option, x, y, MENU_OPTION_SIZE, color);
                     
-                    // Badge "NEW" para Continue se há novo save
+                    
                     if i == 0 && self.has_new_save {
                         let new_text = "NEW";
                         draw_text(new_text, x + option_width + 10.0, y, 20.0, RED);
                     }
                     
-                    // Badge "NEW" para Versus se não foi jogado
+                    
                     if i == 2 && !self.versus_played {
                         let new_text = "NEW";
                         draw_text(new_text, x + option_width + 10.0, y, 20.0, GREEN);
                     }
                 }
                 
-                // Calcular posição do último item do menu para evitar conflito
+                
                 let last_option_y = start_y + ((menu_options.len() - 1) as f32 * MENU_OPTION_SPACING);
                 let last_option_height = MENU_OPTION_SIZE;
-                let instructions_y = last_option_y + last_option_height + 40.0; // Espaçamento de 40px após o último item
+                let instructions_y = last_option_y + last_option_height + 40.0; 
                 
-                // Instructions (smaller and more discrete) - posicionadas após o último item do menu
+                
                 let instructions = "ARROWS/WASD: Navigate | ENTER/SPACE: Select";
                 let inst_width = measure_text(instructions, None, MENU_INSTRUCTION_SIZE as u16, 1.0).width;
                 draw_text(
@@ -1641,7 +1801,7 @@ impl Game {
                     GRAY,
                 );
                 
-                // Versão do jogo (canto inferior esquerdo)
+                
                 let version_text = format!("v{}", GAME_VERSION);
                 draw_text(
                     &version_text,
@@ -1652,7 +1812,7 @@ impl Game {
                 );
             }
             GameState::NameInput => {
-                // Tela de entrada de nome
+                
                 clear_background(WHITE);
                 
                 let title = "ENTER YOUR NAME";
@@ -1666,7 +1826,7 @@ impl Game {
                     BLACK,
                 );
                 
-                // Campo de entrada
+                
                 let input_label = "Name:";
                 let input_size = 32.0;
                 draw_text(
@@ -1677,7 +1837,7 @@ impl Game {
                     BLACK,
                 );
                 
-                // Mostrar nome digitado
+                
                 let name_display = if self.name_input.is_empty() {
                     "_"
                 } else {
@@ -1691,7 +1851,7 @@ impl Game {
                     BLACK,
                 );
                 
-                // Mensagem de validação
+                
                 if let Some(ref error) = self.name_input_error {
                     let error_width = measure_text(error, None, 20, 1.0).width;
                     draw_text(
@@ -1726,7 +1886,7 @@ impl Game {
                     }
                 }
                 
-                // Efeito especial se o nome for guicybercode
+                
                 if self.name_input.to_lowercase() == "guicybercode" {
                     let special_text = "Special mode activated!";
                     let special_width = measure_text(special_text, None, 24, 1.0).width;
@@ -1741,7 +1901,7 @@ impl Game {
                     );
                 }
                 
-                // Instruções
+                
                 let instructions = "ENTER: Confirm | ESC: Cancel";
                 let inst_width = measure_text(instructions, None, MENU_INSTRUCTION_SIZE as u16, 1.0).width;
                 draw_text(
@@ -1766,7 +1926,7 @@ impl Game {
                     BLACK,
                 );
                 
-                // Conteúdo das páginas
+                
                 let content = match self.tutorial_page {
                     0 => vec![
                         "CONTROLS",
@@ -1812,7 +1972,7 @@ impl Game {
                 for (i, line) in content.iter().enumerate() {
                     let line_width = measure_text(line, None, 28, 1.0).width;
                     let color = if i == 0 && !line.is_empty() {
-                        BLACK // Título da seção
+                        BLACK 
                     } else {
                         DARKGRAY
                     };
@@ -1825,7 +1985,7 @@ impl Game {
                     );
                 }
                 
-                // Número da página
+                
                 let page_text = format!("{}/{}", self.tutorial_page + 1, TUTORIAL_PAGE_COUNT);
                 let page_width = measure_text(&page_text, None, 24, 1.0).width;
                 draw_text(
@@ -1836,7 +1996,7 @@ impl Game {
                     GRAY,
                 );
                 
-                // Instruções
+                
                 let instructions = "LEFT/RIGHT: Navigate | ENTER: Next/Start | ESC: Skip";
                 let inst_width = measure_text(instructions, None, MENU_INSTRUCTION_SIZE as u16, 1.0).width;
                 draw_text(
@@ -1848,7 +2008,7 @@ impl Game {
                 );
             }
             GameState::ContinueMenu => {
-                // Menu de continue
+                
                 clear_background(WHITE);
                 
                 let title = "CONTINUE GAME";
@@ -1870,19 +2030,19 @@ impl Game {
                     let y = start_y + (slot_idx as f32 * slot_spacing);
                     let slot_num = slot_idx + 1;
                     
-                    // Destacar slot selecionado
+                    
                     let color = if slot_idx == self.continue_selection {
                         BLACK
                     } else {
                         DARKGRAY
                     };
                     
-                    // Indicador de seleção
+                    
                     if slot_idx == self.continue_selection {
                         draw_text(">", 100.0, y, 32.0, BLACK);
                     }
                     
-                    // Informações do slot
+                    
                     if let Some(save_data) = save_data_opt {
                         let minutes = (save_data.time_taken / 60.0) as u32;
                         let seconds = (save_data.time_taken % 60.0) as u32;
@@ -1903,7 +2063,7 @@ impl Game {
                     }
                 }
                 
-                // Modo de confirmação de delete
+                
                 if self.continue_mode == ContinueMode::DeleteConfirm {
                     let confirm_text = "Are you sure you want to delete this save? (Y/N)";
                     let confirm_width = measure_text(confirm_text, None, 28, 1.0).width;
@@ -1915,7 +2075,7 @@ impl Game {
                         RED,
                     );
                 } else {
-                    // Instruções
+                    
                     let instructions = "ENTER: Load | DELETE: Erase | ESC: Back";
                     let inst_width = measure_text(instructions, None, MENU_INSTRUCTION_SIZE as u16, 1.0).width;
                     draw_text(
@@ -1928,7 +2088,7 @@ impl Game {
                 }
             }
             GameState::MenuExitConfirm => {
-                // Exit confirmation screen
+                
                 let confirm_text = "ARE YOU SURE YOU WANT TO EXIT?";
                 let confirm_size = 42.0;
                 let confirm_width = measure_text(confirm_text, None, confirm_size as u16, 1.0).width;
@@ -1940,7 +2100,7 @@ impl Game {
                     BLACK,
                 );
                 
-                // Confirmation options
+                
                 let yes_text = "YES (ENTER/SPACE)";
                 let no_text = "NO (ESC)";
                 let option_size = 32.0;
@@ -1965,7 +2125,7 @@ impl Game {
                 );
             }
             GameState::Settings => {
-                // Title
+                
                 let title = "SETTINGS";
                 let title_size = 48.0;
                 let title_width = measure_text(title, None, title_size as u16, 1.0).width;
@@ -1977,18 +2137,18 @@ impl Game {
                     BLACK,
                 );
                 
-                // Opções de configuração
+                
                 let option_size = 30.0;
                 let start_y = 180.0;
                 let spacing = 60.0;
                 
-                // Available resolutions (display strings)
+                
                 let resolution_names = ["800x600", "1024x768", "1280x720"];
                 
-                // Ensure resolution_index is within bounds
+                
                 let safe_resolution_index = self.resolution_index.min(RESOLUTIONS.len().saturating_sub(1));
                 
-                // Sound
+                
                 let sound_text = format!("SOUND: {}", if self.sound_enabled { "ON" } else { "OFF" });
                 let sound_color = if self.settings_selection == 0 { BLACK } else { GRAY };
                 let sound_width = measure_text(&sound_text, None, option_size as u16, 1.0).width;
@@ -1998,7 +2158,7 @@ impl Game {
                 }
                 draw_text(&sound_text, screen_width() / 2.0 - sound_width / 2.0, start_y, option_size, sound_color);
                 
-                // Resolution
+                
                 let res_text = format!("RESOLUTION: {}", resolution_names[safe_resolution_index]);
                 let res_color = if self.settings_selection == 1 { BLACK } else { GRAY };
                 let res_width = measure_text(&res_text, None, option_size as u16, 1.0).width;
@@ -2008,7 +2168,7 @@ impl Game {
                 }
                 draw_text(&res_text, screen_width() / 2.0 - res_width / 2.0, start_y + spacing, option_size, res_color);
                 
-                // Controls (display only)
+                
                 let controls_text = "CONTROLS";
                 let controls_color = if self.settings_selection == 2 { BLACK } else { GRAY };
                 let controls_width = measure_text(controls_text, None, option_size as u16, 1.0).width;
@@ -2017,7 +2177,7 @@ impl Game {
                 }
                 draw_text(controls_text, screen_width() / 2.0 - controls_width / 2.0, start_y + spacing * 2.0, option_size, controls_color);
                 
-                // Show controls if selected
+                
                 if self.settings_selection == 2 {
                     let controls_info = [
                         "ARROWS / WASD - Move",
@@ -2039,7 +2199,7 @@ impl Game {
                     }
                 }
                 
-                // Back
+                
                 let back_text = "BACK";
                 let back_color = if self.settings_selection == 3 { BLACK } else { GRAY };
                 let back_width = measure_text(back_text, None, option_size as u16, 1.0).width;
@@ -2048,7 +2208,7 @@ impl Game {
                 }
                 draw_text(back_text, screen_width() / 2.0 - back_width / 2.0, start_y + spacing * 4.5, option_size, back_color);
                 
-                // Instructions
+                
                 let instructions = "Use ARROWS to navigate and adjust, ENTER to confirm, ESC to go back";
                 let inst_size = 16.0;
                 let inst_width = measure_text(instructions, None, inst_size as u16, 1.0).width;
@@ -2061,7 +2221,7 @@ impl Game {
                 );
             }
             GameState::Credits => {
-                // Título
+                
                 let title = "CREDITS";
                 let title_size = MENU_TITLE_SIZE;
                 let title_width = measure_text(title, None, title_size as u16, 1.0).width;
@@ -2073,13 +2233,13 @@ impl Game {
                     BLACK,
                 );
                 
-                // Informações de créditos organizadas
+                
                 let start_y = 140.0;
                 let spacing = 28.0;
                 let section_spacing = 40.0;
                 let mut current_y = start_y;
                 
-                // Título do jogo
+                
                 let game_title = "JUMP QUEST";
                 let game_title_size = 36.0;
                 let game_title_width = measure_text(game_title, None, game_title_size as u16, 1.0).width;
@@ -2092,7 +2252,7 @@ impl Game {
                 );
                 current_y += section_spacing;
                 
-                // Made by
+                
                 let made_by = "Made by";
                 let made_by_size = 20.0;
                 let made_by_width = measure_text(made_by, None, made_by_size as u16, 1.0).width;
@@ -2105,7 +2265,7 @@ impl Game {
                 );
                 current_y += spacing;
                 
-                // Developer name - using ASCII stylized version
+                
                 let developer = "guicybercode";
                 let developer_size = 32.0;
                 let developer_width = measure_text(developer, None, developer_size as u16, 1.0).width;
@@ -2118,7 +2278,7 @@ impl Game {
                 );
                 current_y += section_spacing;
                 
-                // Seção: Technology Stack
+                
                 let stack_title = "Technology Stack";
                 let stack_title_size = 24.0;
                 let stack_title_width = measure_text(stack_title, None, stack_title_size as u16, 1.0).width;
@@ -2131,7 +2291,7 @@ impl Game {
                 );
                 current_y += spacing;
                 
-                // Detalhes da stack
+                
                 let stack_details = vec![
                     "Programming Language: Rust",
                     "Game Engine: Macroquad 0.4",
@@ -2154,7 +2314,7 @@ impl Game {
                 }
                 current_y += section_spacing - spacing;
                 
-                // Seção: Game Info
+                
                 let info_title = "Game Information";
                 let info_title_size = 24.0;
                 let info_title_width = measure_text(info_title, None, info_title_size as u16, 1.0).width;
@@ -2185,7 +2345,7 @@ impl Game {
                     current_y += spacing - 4.0;
                 }
                 
-                // Instruções para voltar (no final)
+                
                 let back_instruction = "Press ESC, ENTER or SPACE to return";
                 let back_size = MENU_INSTRUCTION_SIZE;
                 let back_width = measure_text(back_instruction, None, back_size as u16, 1.0).width;
@@ -2198,143 +2358,24 @@ impl Game {
                 );
             }
             GameState::Playing => {
-                // Otimização: só desenhar objetos visíveis na tela
-                let screen_left = self.camera.x - COLLISION_MARGIN; // Margem extra
-                let screen_right = self.camera.x + screen_width() + COLLISION_MARGIN;
-                let screen_top = self.camera.y - COLLISION_MARGIN;
-                let screen_bottom = self.camera.y + screen_height() + COLLISION_MARGIN;
-                
-                // Desenhar plataformas (só as visíveis)
-                for platform in &self.platforms {
-                    if platform.x + platform.width >= screen_left 
-                        && platform.x <= screen_right
-                        && platform.y + platform.height >= screen_top
-                        && platform.y <= screen_bottom
-                    {
-                        platform.draw(self.camera.x, self.camera.y);
-                    }
-                }
-                
-                // Desenhar checkpoints (só os visíveis)
-                for checkpoint in &self.checkpoints {
-                    if checkpoint.x >= screen_left 
-                        && checkpoint.x <= screen_right
-                        && checkpoint.y >= screen_top
-                        && checkpoint.y <= screen_bottom
-                    {
-                        checkpoint.draw(self.camera.x, self.camera.y);
-                    }
-                }
-                
-                // Desenhar moedas (só as não coletadas e visíveis)
-                for coin in &self.coins {
-                    if !coin.collected 
-                        && coin.x >= screen_left 
-                        && coin.x <= screen_right
-                        && coin.y >= screen_top
-                        && coin.y <= screen_bottom
-                    {
-                        coin.draw(self.camera.x, self.camera.y);
-                    }
-                }
-                
-                // Desenhar inimigos (só os vivos e visíveis)
-                for enemy in &self.enemies {
-                    if enemy.alive
-                        && enemy.x >= screen_left 
-                        && enemy.x <= screen_right
-                        && enemy.y >= screen_top
-                        && enemy.y <= screen_bottom
-                    {
-                        enemy.draw(self.camera.x, self.camera.y);
-                    }
-                }
-                
-                // Desenhar jogador (sempre visível)
-                self.player.draw(self.camera.x, self.camera.y);
-                
-                // UI - Contador de moedas, fase e tempo
-                let time_seconds = self.time_remaining as u32;
-                let time_text = format!("{}", time_seconds);
-                
-                // Cor do tempo: vermelho se menos de 30 segundos, amarelo se menos de 60, preto caso contrário
-                let time_color = if self.time_remaining < TIME_WARNING_RED {
-                    RED
-                } else if self.time_remaining < TIME_WARNING_YELLOW {
-                    YELLOW
-                } else {
-                    BLACK
-                };
-                
-                // Mostrar nome do jogador
-                let player_name_display = if self.player_name.is_empty() {
-                    "Player"
-                } else {
-                    &self.player_name
-                };
-                draw_text(
-                    player_name_display,
-                    10.0,
-                    30.0,
-                    24.0,
-                    BLACK,
-                );
-                
-                draw_text(
-                    &format!("Level: {} | Coins: {}/{} | Time: {}s", 
-                        self.current_level, self.coins_collected, self.total_coins, time_seconds),
-                    10.0,
-                    60.0,
-                    30.0,
-                    BLACK,
-                );
-                
-                // Show score
-                let score_text = format!("Score: {}", self.score);
-                draw_text(
-                    &score_text,
-                    10.0,
-                    100.0,
-                    28.0,
-                    BLACK,
-                );
-                
-                // Desenhar vidas
-                let lives_text = format!("Lives: {}", self.lives);
-                draw_text(
-                    &lives_text,
-                    10.0,
-                    130.0,
-                    28.0,
-                    if self.lives <= 1 { RED } else { BLACK },
-                );
-                
-                // Mostrar tempo em destaque no canto superior direito
-                let time_width = measure_text(&time_text, None, 40u16, 1.0).width;
-                draw_text(
-                    &time_text,
-                    screen_width() - time_width - 20.0,
-                    40.0,
-                    40.0,
-                    time_color,
-                );
-                
-                // Fadein ao iniciar fase (overlay preto que vai sumindo)
+                self.draw_level_world();
+                self.draw_level_hud(false);
+
                 if self.level_start_fade_timer > 0.0 {
-                    let fade_progress = self.level_start_fade_timer / 1.5; // 1.0 a 0.0
+                    let fade_progress = self.level_start_fade_timer / 1.5;
                     let fade_alpha = fade_progress.min(1.0);
                     draw_rectangle(0.0, 0.0, screen_width(), screen_height(), Color::new(0.0, 0.0, 0.0, fade_alpha));
                 }
             }
             GameState::Versus => {
-                // Desenhar plataformas
+                
                 let camera_x = self.camera.x;
                 let camera_y = self.camera.y;
                 for platform in &self.versus_platforms {
                     platform.draw(camera_x, camera_y);
                 }
                 
-                // Desenhar players
+                
                 if self.respawn_timer_p1 <= 0.0 {
                     self.player.draw_vs(camera_x, camera_y, true);
                 }
@@ -2345,7 +2386,7 @@ impl Game {
                     }
                 }
                 
-                // Desenhar pontuações no topo (kills e pontos)
+                
                 let p1_score_text = format!("P1: {} kills | {} pts", self.player1_score, self.player1_points);
                 let p2_score_text = format!("P2: {} kills | {} pts", self.player2_score, self.player2_points);
                 
@@ -2354,11 +2395,11 @@ impl Game {
                 let p2_width = measure_text(&p2_score_text, None, 24u16, 1.0).width;
                 draw_text(&p2_score_text, screen_width() - p2_width - 20.0, 30.0, 24.0, DARKGRAY);
                 
-                // Desenhar timer no topo central (apenas segundos)
+                
                 let time_text = format!("{}", self.versus_time_remaining as u32);
                 let time_width = measure_text(&time_text, None, 28u16, 1.0).width;
                 
-                // Cor do timer (vermelho quando < 60 segundos)
+                
                 let time_color = if self.versus_time_remaining < 60.0 {
                     RED
                 } else if self.versus_time_remaining < 120.0 {
@@ -2375,7 +2416,7 @@ impl Game {
                     time_color,
                 );
                 
-                // Instruções
+                
                 let instructions = "P1: WASD | P2: Arrow Keys | ESC: Menu";
                 let inst_width = measure_text(instructions, None, 16u16, 1.0).width;
                 draw_text(
@@ -2386,15 +2427,15 @@ impl Game {
                     GRAY,
                 );
                 
-                // Fadein ao iniciar fase (overlay preto que vai sumindo)
+                
                 if self.level_start_fade_timer > 0.0 {
-                    let fade_progress = self.level_start_fade_timer / 1.5; // 1.0 a 0.0
+                    let fade_progress = self.level_start_fade_timer / 1.5; 
                     let fade_alpha = fade_progress.min(1.0);
                     draw_rectangle(0.0, 0.0, screen_width(), screen_height(), Color::new(0.0, 0.0, 0.0, fade_alpha));
                 }
             }
             GameState::VersusEnd => {
-                // Tela de resultados finais
+                
                 let title = "GAME OVER";
                 let title_size = 48.0;
                 let title_width = measure_text(title, None, title_size as u16, 1.0).width;
@@ -2406,7 +2447,7 @@ impl Game {
                     BLACK,
                 );
                 
-                // Determinar vencedor baseado em pontos (não kills)
+                
                 let winner_text = if self.player1_points > self.player2_points {
                     "PLAYER 1 WINS!"
                 } else if self.player2_points > self.player1_points {
@@ -2433,7 +2474,7 @@ impl Game {
                     winner_color,
                 );
                 
-                // Scores finais (kills e pontos)
+                
                 let score_size = 28.0;
                 let p1_final_text = format!("Player 1: {} kills | {} points", self.player1_score, self.player1_points);
                 let p2_final_text = format!("Player 2: {} kills | {} points", self.player2_score, self.player2_points);
@@ -2457,7 +2498,7 @@ impl Game {
                     DARKGRAY,
                 );
                 
-                // Instruções para voltar
+                
                 let back_text = "Press ENTER, SPACE or ESC to return to menu";
                 let back_size = 18.0;
                 let back_width = measure_text(back_text, None, back_size as u16, 1.0).width;
@@ -2470,7 +2511,7 @@ impl Game {
                 );
             }
             GameState::LevelSelect => {
-                // Title
+                
                 let title = "SELECT LEVEL";
                 let title_size = 42.0;
                 let title_width = measure_text(title, None, title_size as u16, 1.0).width;
@@ -2482,20 +2523,21 @@ impl Game {
                     BLACK,
                 );
                 
-                // Desenhar as 4 fases
-                let spacing = 100.0;
-                let start_x = screen_width() / 2.0 - (spacing * 3.0) / 2.0;
-                let center_y = screen_height() / 2.0;
-                let level_names = vec!["Level 1", "Level 2", "Level 3", "Level 4"];
                 
-                for i in 0..4 {
+                let spacing = 100.0;
+                let level_count = self.unlocked_levels.len();
+                let start_x = screen_width() / 2.0 - (spacing * (level_count as f32 - 1.0)) / 2.0;
+                let center_y = screen_height() / 2.0;
+                let level_names: Vec<String> = (1..=level_count).map(|i| format!("Level {}", i)).collect();
+                
+                for i in 0..level_count {
                     let x = start_x + (i as f32 * spacing);
                     let is_selected = i == self.level_selection;
                     let is_unlocked = self.unlocked_levels[i];
                     
-                    // Desenhar círculo da fase
+                    
                     let circle_color = if !is_unlocked {
-                        // Fase bloqueada - cinza escuro
+                        
                         DARKGRAY
                     } else if is_selected {
                         BLACK
@@ -2506,7 +2548,7 @@ impl Game {
                     draw_circle(x, center_y, circle_radius, circle_color);
                     draw_circle_lines(x, center_y, circle_radius, 3.0, if is_selected { WHITE } else { BLACK });
                     
-                    // Número da fase
+                    
                     let num_text = format!("{}", i + 1);
                     let num_size = 36.0;
                     let num_width = measure_text(&num_text, None, num_size as u16, 1.0).width;
@@ -2522,12 +2564,12 @@ impl Game {
                         },
                     );
                     
-                    // Level name and info below
+                    
                     let (difficulty, coin_count, difficulty_color) = self.get_level_info(i + 1);
                     
                     if is_unlocked {
                         let name_size = 18.0;
-                        let name_text = level_names[i];
+                        let name_text = &level_names[i];
                         let name_width = measure_text(name_text, None, name_size as u16, 1.0).width;
                         draw_text(
                             name_text,
@@ -2537,7 +2579,7 @@ impl Game {
                             if is_selected { BLACK } else { GRAY },
                         );
                         
-                        // Mostrar dificuldade com cor
+                        
                         let diff_text = difficulty;
                         let diff_width = measure_text(&diff_text, None, 16, 1.0).width;
                         draw_text(
@@ -2548,7 +2590,7 @@ impl Game {
                             difficulty_color,
                         );
                         
-                        // Mostrar número de moedas
+                        
                         let coins_text = format!("{} coins", coin_count);
                         let coins_width = measure_text(&coins_text, None, 14, 1.0).width;
                         draw_text(
@@ -2559,7 +2601,7 @@ impl Game {
                             DARKGRAY,
                         );
                     } else {
-                        // Locked indicator
+                        
                         let lock_text = "LOCKED";
                         let lock_size = 14.0;
                         let lock_width = measure_text(lock_text, None, lock_size as u16, 1.0).width;
@@ -2573,7 +2615,7 @@ impl Game {
                     }
                 }
                 
-                // Instructions
+                
                 let instructions = "ARROWS or A/D: Navigate | ENTER/SPACE: Select | ESC: Back";
                 let inst_size = 18.0;
                 let inst_width = measure_text(instructions, None, inst_size as u16, 1.0).width;
@@ -2586,115 +2628,11 @@ impl Game {
                 );
             }
             GameState::Pause => {
-                // Desenhar o jogo por trás (estado congelado)
-                // Primeiro, desenhar tudo do jogo normalmente
-                let screen_left = self.camera.x - COLLISION_MARGIN;
-                let screen_right = self.camera.x + screen_width() + COLLISION_MARGIN;
-                let screen_top = self.camera.y - COLLISION_MARGIN;
-                let screen_bottom = self.camera.y + screen_height() + COLLISION_MARGIN;
-                
-                // Desenhar plataformas
-                for platform in &self.platforms {
-                    if platform.x + platform.width >= screen_left 
-                        && platform.x <= screen_right
-                        && platform.y + platform.height >= screen_top
-                        && platform.y <= screen_bottom
-                    {
-                        platform.draw(self.camera.x, self.camera.y);
-                    }
-                }
-                
-                // Desenhar checkpoints
-                for checkpoint in &self.checkpoints {
-                    if checkpoint.x >= screen_left 
-                        && checkpoint.x <= screen_right
-                        && checkpoint.y >= screen_top
-                        && checkpoint.y <= screen_bottom
-                    {
-                        checkpoint.draw(self.camera.x, self.camera.y);
-                    }
-                }
-                
-                // Desenhar moedas
-                for coin in &self.coins {
-                    if !coin.collected 
-                        && coin.x >= screen_left 
-                        && coin.x <= screen_right
-                        && coin.y >= screen_top
-                        && coin.y <= screen_bottom
-                    {
-                        coin.draw(self.camera.x, self.camera.y);
-                    }
-                }
-                
-                // Desenhar inimigos
-                for enemy in &self.enemies {
-                    if enemy.alive 
-                        && enemy.x >= screen_left 
-                        && enemy.x <= screen_right
-                        && enemy.y >= screen_top
-                        && enemy.y <= screen_bottom
-                    {
-                        enemy.draw(self.camera.x, self.camera.y);
-                    }
-                }
-                
-                // Desenhar player
-                self.player.draw(self.camera.x, self.camera.y);
-                
-                // Desenhar HUD
-                let time_seconds = self.time_remaining as u32;
-                let time_text = format!("Time: {}s", time_seconds);
-                let time_color = if self.time_remaining < TIME_WARNING_RED {
-                    RED
-                } else if self.time_remaining < TIME_WARNING_YELLOW {
-                    ORANGE
-                } else {
-                    BLACK
-                };
-                
-                draw_text(
-                    &format!("Level: {} | Coins: {}/{} | Time: {}s", 
-                        self.current_level, self.coins_collected, self.total_coins, time_seconds),
-                    10.0,
-                    60.0,
-                    30.0,
-                    BLACK,
-                );
-                
-                let score_text = format!("Score: {}", self.score);
-                draw_text(&score_text, 10.0, 100.0, 28.0, BLACK);
-                
-                let lives_text = format!("Lives: {}", self.lives);
-                draw_text(
-                    &lives_text,
-                    10.0,
-                    130.0,
-                    28.0,
-                    if self.lives <= 1 { RED } else { BLACK },
-                );
-                
-                let player_name_display = if self.player_name.is_empty() {
-                    "Player"
-                } else {
-                    &self.player_name
-                };
-                draw_text(player_name_display, 10.0, 30.0, 24.0, BLACK);
-                
-                let time_width = measure_text(&time_text, None, 40u16, 1.0).width;
-                draw_text(
-                    &time_text,
-                    screen_width() - time_width - 20.0,
-                    40.0,
-                    40.0,
-                    time_color,
-                );
-                
-                // Overlay escuro semi-transparente para efeito de blur/desfoque
-                draw_rectangle(0.0, 0.0, screen_width(), screen_height(), 
+                self.draw_level_world();
+                self.draw_level_hud(true);
+                draw_rectangle(0.0, 0.0, screen_width(), screen_height(),
                     Color::new(0.0, 0.0, 0.0, 0.6));
-                
-                // Menu de pausa
+
                 let title = "PAUSED";
                 let title_size = 56.0;
                 let title_width = measure_text(title, None, title_size as u16, 1.0).width;
@@ -2720,7 +2658,7 @@ impl Game {
                         LIGHTGRAY
                     };
                     
-                    // Indicador de seleção
+                    
                     if i == self.pause_selection {
                         draw_text(">", x - MENU_INDICATOR_OFFSET, y, MENU_OPTION_SIZE, WHITE);
                     }
@@ -2728,7 +2666,7 @@ impl Game {
                     draw_text(option, x, y, MENU_OPTION_SIZE, color);
                 }
                 
-                // Instruções
+                
                 let instructions = "ARROWS/WASD: Navigate | ENTER: Select | P/ESC: Resume";
                 let inst_width = measure_text(instructions, None, MENU_INSTRUCTION_SIZE as u16, 1.0).width;
                 draw_text(
@@ -2740,39 +2678,39 @@ impl Game {
                 );
             }
             GameState::Respawn => {
-                // Tela de respawn com fadeout
+                
                 let time_remaining = self.respawn_timer;
                 let total_time = 3.0;
-                let progress = 1.0 - (time_remaining / total_time); // 0.0 a 1.0
+                let progress = 1.0 - (time_remaining / total_time); 
                 
-                // Fadeout do fundo (preto com alpha aumentando)
+                
                 let bg_alpha = (progress * 0.8).min(0.8);
                 draw_rectangle(0.0, 0.0, screen_width(), screen_height(), Color::new(0.0, 0.0, 0.0, bg_alpha));
                 
-                // Desenhar personagem com fadeout (no centro)
+                
                 let player_size = 64.0;
                 let player_x = screen_width() / 2.0 - player_size / 2.0;
                 let player_y = screen_height() / 2.0 - player_size / 2.0 - 50.0;
                 
-                // Alpha do personagem diminui (fadeout)
+                
                 let player_alpha = (1.0 - progress * 1.5).max(0.0);
                 let player_color = Color::new(0.0, 0.0, 0.0, player_alpha);
                 
-                // Desenhar personagem simplificado (retângulo preto)
+                
                 draw_rectangle(player_x, player_y, player_size, player_size, player_color);
                 draw_rectangle_lines(player_x, player_y, player_size, player_size, 2.0, Color::new(1.0, 1.0, 1.0, player_alpha));
                 
-                // Olhos do personagem
+                
                 let eye_size = 6.0;
                 let eye_y = player_y + 20.0;
                 draw_circle(player_x + 20.0, eye_y, eye_size, Color::new(1.0, 1.0, 1.0, player_alpha));
                 draw_circle(player_x + 44.0, eye_y, eye_size, Color::new(1.0, 1.0, 1.0, player_alpha));
                 
-                // Texto de vidas restantes
+                
                 let lives_text = format!("Lives: {}", self.lives);
                 let lives_size = 48.0;
                 let lives_width = measure_text(&lives_text, None, lives_size as u16, 1.0).width;
-                let lives_alpha = 1.0 - (progress * 0.5).min(0.5); // Fade mais lento que o personagem
+                let lives_alpha = 1.0 - (progress * 0.5).min(0.5); 
                 let lives_color = Color::new(1.0, 1.0, 1.0, lives_alpha);
                 
                 draw_text(
@@ -2783,7 +2721,7 @@ impl Game {
                     lives_color,
                 );
                 
-                // Contagem regressiva
+                
                 let countdown = (time_remaining.ceil() as u32).max(1);
                 let countdown_text = format!("Respawn in {}...", countdown);
                 let countdown_size = 32.0;
@@ -2798,16 +2736,16 @@ impl Game {
                 );
             }
             GameState::GameOver => {
-                // Fadeout no game over (overlay preto que vai aparecendo)
+                
                 let fade_progress = if self.game_over_fade_timer > 0.0 {
-                    (2.0 - self.game_over_fade_timer) / 2.0 // 0.0 a 1.0
+                    (2.0 - self.game_over_fade_timer) / 2.0 
                 } else {
-                    1.0 // Fade completo
+                    1.0 
                 };
                 let fade_alpha = fade_progress.min(1.0);
                 draw_rectangle(0.0, 0.0, screen_width(), screen_height(), Color::new(0.0, 0.0, 0.0, fade_alpha));
                 
-                // Game over screen (só mostrar após fadeout completo)
+                
                 if fade_alpha >= 1.0 {
                     let text = "GAME OVER";
                     let text_size = 60.0;
@@ -2820,7 +2758,7 @@ impl Game {
                         WHITE,
                     );
                     
-                    // Show score
+                    
                     let score_text = format!("Score: {}", self.score);
                     let score_size = 36.0;
                     let score_width = measure_text(&score_text, None, score_size as u16, 1.0).width;
@@ -2832,7 +2770,7 @@ impl Game {
                         WHITE,
                     );
                     
-                    // Show coins collected
+                    
                     let coins_text = format!("Coins: {}/{}", self.coins_collected, self.total_coins);
                     let coins_size = 24.0;
                     let coins_width = measure_text(&coins_text, None, coins_size as u16, 1.0).width;
@@ -2857,7 +2795,7 @@ impl Game {
                 }
             }
             GameState::LevelComplete => {
-                // Level complete screen
+                
                 let text = format!("LEVEL {} COMPLETE!", self.current_level);
                 let text_size = 50.0;
                 let text_width = measure_text(&text, None, text_size as u16, 1.0).width;
@@ -2869,7 +2807,7 @@ impl Game {
                     BLACK,
                 );
                 
-                // Show score
+                
                 let score_text = format!("Score: {}", self.score);
                 let score_size = 36.0;
                 let score_width = measure_text(&score_text, None, score_size as u16, 1.0).width;
@@ -2881,7 +2819,7 @@ impl Game {
                     BLACK,
                 );
                 
-                // Show coins collected
+                
                 let coins_text = format!("Coins: {}/{}", self.coins_collected, self.total_coins);
                 let coins_size = 24.0;
                 let coins_width = measure_text(&coins_text, None, coins_size as u16, 1.0).width;
@@ -2893,7 +2831,7 @@ impl Game {
                     GRAY,
                 );
                 
-                // Mostrar vidas no Level Complete
+                
                 let lives_text = format!("Lives: {}", self.lives);
                 let lives_size = 28.0;
                 let lives_width = measure_text(&lives_text, None, lives_size as u16, 1.0).width;
@@ -2905,10 +2843,10 @@ impl Game {
                     BLACK,
                 );
                 
-                // Unlock message
-                if self.current_level < 4 
-                    && self.current_level < self.unlocked_levels.len() 
-                    && self.unlocked_levels[self.current_level] 
+                
+                if self.current_level < MAX_LEVELS
+                    && self.current_level < self.unlocked_levels.len()
+                    && self.unlocked_levels[self.current_level]
                 {
                     let unlock_text = format!("Level {} unlocked!", self.current_level + 1);
                     let unlock_size = 24.0;
@@ -2935,7 +2873,7 @@ impl Game {
             }
         }
         
-        // Desenhar overlay de transição no final (sobre todas as telas)
+        
         self.draw_transition();
     }
 }

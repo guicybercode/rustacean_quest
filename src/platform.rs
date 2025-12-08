@@ -86,7 +86,7 @@ pub fn create_level_platforms(level: usize) -> Vec<Platform> {
     match level {
         1 => {
             // Fase 1 - Layout clássico
-            platforms.push(Platform::new(0.0, 550.0, 3000.0, 50.0));
+            platforms.push(Platform::new(0.0, 550.0, 4200.0, 50.0));
             platforms.push(Platform::new(200.0, 450.0, 150.0, 20.0));
             platforms.push(Platform::new(400.0, 400.0, 150.0, 20.0));
             platforms.push(Platform::new(600.0, 350.0, 150.0, 20.0));
@@ -104,7 +104,7 @@ pub fn create_level_platforms(level: usize) -> Vec<Platform> {
         }
         2 => {
             // Fase 2 - Mais vertical e desafiadora
-            platforms.push(Platform::new(0.0, 550.0, 3000.0, 50.0));
+            platforms.push(Platform::new(0.0, 550.0, 4200.0, 50.0));
             platforms.push(Platform::new(150.0, 500.0, 100.0, 20.0));
             platforms.push(Platform::new(300.0, 450.0, 100.0, 20.0));
             platforms.push(Platform::new(450.0, 400.0, 100.0, 20.0));
@@ -123,7 +123,7 @@ pub fn create_level_platforms(level: usize) -> Vec<Platform> {
         }
         3 => {
             // Fase 3 - Layout com mais espaços e desafios
-            platforms.push(Platform::new(0.0, 550.0, 3000.0, 50.0));
+            platforms.push(Platform::new(0.0, 550.0, 4200.0, 50.0));
             platforms.push(Platform::new(100.0, 450.0, 200.0, 20.0));
             platforms.push(Platform::new(400.0, 500.0, 150.0, 20.0));
             platforms.push(Platform::new(650.0, 450.0, 100.0, 20.0));
@@ -144,7 +144,7 @@ pub fn create_level_platforms(level: usize) -> Vec<Platform> {
         }
         4 => {
             // Fase 4 - Fase final mais desafiadora
-            platforms.push(Platform::new(0.0, 550.0, 3000.0, 50.0));
+            platforms.push(Platform::new(0.0, 550.0, 4200.0, 50.0));
             // Plataformas em zigue-zague
             platforms.push(Platform::new(100.0, 500.0, 120.0, 20.0));
             platforms.push(Platform::new(250.0, 450.0, 120.0, 20.0));
@@ -171,9 +171,45 @@ pub fn create_level_platforms(level: usize) -> Vec<Platform> {
             platforms.push(Platform::new(1500.0, 500.0, 40.0, 50.0));
             platforms.push(Platform::new(2300.0, 500.0, 40.0, 50.0));
         }
+        5 => {
+            // Fase 5 - Grande e mais difícil (preto e branco)
+            platforms.push(Platform::new(0.0, 550.0, 4200.0, 50.0));
+
+            platforms.push(Platform::new(180.0, 500.0, 120.0, 20.0));
+            platforms.push(Platform::new(420.0, 440.0, 120.0, 20.0));
+            platforms.push(Platform::new(680.0, 380.0, 110.0, 20.0));
+            platforms.push(Platform::new(950.0, 330.0, 100.0, 20.0));
+
+            platforms.push(Platform::new(1250.0, 420.0, 180.0, 20.0));
+            platforms.push(Platform::new(1500.0, 320.0, 140.0, 20.0));
+            platforms.push(Platform::new(1700.0, 260.0, 120.0, 20.0));
+            platforms.push(Platform::new(1900.0, 210.0, 100.0, 20.0));
+
+            platforms.push(Platform::new(2100.0, 440.0, 180.0, 20.0));
+            platforms.push(Platform::new(2350.0, 380.0, 140.0, 20.0));
+            platforms.push(Platform::new(2550.0, 320.0, 120.0, 20.0));
+            platforms.push(Platform::new(2750.0, 260.0, 100.0, 20.0));
+
+            platforms.push(Platform::new(3000.0, 500.0, 140.0, 20.0));
+            platforms.push(Platform::new(3200.0, 440.0, 120.0, 20.0));
+            platforms.push(Platform::new(3400.0, 380.0, 100.0, 20.0));
+            platforms.push(Platform::new(3600.0, 320.0, 90.0, 20.0));
+
+            platforms.push(Platform::new(3800.0, 260.0, 140.0, 20.0));
+            platforms.push(Platform::new(4020.0, 220.0, 140.0, 20.0));
+
+            platforms.push(Platform::new(1700.0, 140.0, 80.0, 20.0));
+            platforms.push(Platform::new(2600.0, 160.0, 80.0, 20.0));
+            platforms.push(Platform::new(3200.0, 200.0, 70.0, 20.0));
+
+            platforms.push(Platform::new(900.0, 500.0, 40.0, 50.0));
+            platforms.push(Platform::new(1900.0, 500.0, 40.0, 50.0));
+            platforms.push(Platform::new(3100.0, 500.0, 40.0, 50.0));
+            platforms.push(Platform::new(3800.0, 500.0, 40.0, 50.0));
+        }
         _ => {
             // Fallback para fase 1
-            platforms.push(Platform::new(0.0, 550.0, 3000.0, 50.0));
+            platforms.push(Platform::new(0.0, 550.0, 4200.0, 50.0));
         }
     }
     

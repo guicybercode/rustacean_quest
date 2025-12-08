@@ -7,28 +7,37 @@ pub struct SaveData {
     pub lives: u32,
     pub score: u32,
     #[serde(default)]
-    pub time_taken: f32,        // Tempo para completar última fase
+    pub coins_collected: u32,
     #[serde(default)]
-    pub timestamp: u64,          // Timestamp Unix
+    pub total_coins: u32,
+    #[serde(default)]
+    pub time_remaining: f32,
+    #[serde(default)]
+    pub time_taken: f32,
+    #[serde(default)]
+    pub timestamp: u64,
     pub last_checkpoint_pos: Option<(f32, f32)>,
     #[serde(default)]
-    pub player_name: String,     // Nome do jogador
+    pub player_name: String,
     #[serde(default)]
-    pub tutorial_completed: bool, // Se o tutorial foi completado
+    pub tutorial_completed: bool,
     #[serde(default)]
-    pub versus_played: bool,     // Se o modo versus já foi jogado
+    pub versus_played: bool,
 }
 
 impl SaveData {
     pub fn new() -> Self {
-        let mut unlocked_levels = vec![false; 4];
-        unlocked_levels[0] = true; // Fase 1 desbloqueada
+        let mut unlocked_levels = vec![false; crate::constants::MAX_LEVELS];
+        unlocked_levels[0] = true;
         
         Self {
             current_level: 1,
             unlocked_levels,
             lives: 5,
             score: 0,
+            coins_collected: 0,
+            total_coins: 0,
+            time_remaining: crate::constants::TIME_LIMIT,
             time_taken: 0.0,
             timestamp: 0,
             last_checkpoint_pos: None,

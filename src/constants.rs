@@ -27,8 +27,8 @@ pub const CHECKPOINT_HEIGHT: f32 = 60.0;  // Altura do checkpoint
 
 // === MUNDO ===
 pub const GROUND_Y: f32 = 550.0;          // Posição Y do chão
-pub const WORLD_WIDTH: f32 = 3000.0;      // Largura do mundo
-pub const LEVEL_COMPLETE_X: f32 = 2800.0; // Posição X para completar a fase
+pub const WORLD_WIDTH: f32 = 4200.0;      // Largura do mundo
+pub const LEVEL_COMPLETE_X: f32 = 4000.0; // Posição X para completar a fase
 pub const FALL_DEATH_Y: f32 = 600.0;      // Posição Y que causa morte por queda
 
 // === TELA ===
@@ -48,7 +48,7 @@ pub const TIME_WARNING_RED: f32 = 30.0;   // Tempo para mostrar alerta vermelho
 pub const TIME_WARNING_YELLOW: f32 = 60.0; // Tempo para mostrar alerta amarelo
 
 // === NÍVEIS ===
-pub const MAX_LEVELS: usize = 4;          // Número máximo de fases
+pub const MAX_LEVELS: usize = 5;          // Número máximo de fases
 
 // === COLISÃO ===
 pub const COLLISION_MARGIN: f32 = 100.0;  // Margem para otimização de colisão

@@ -85,6 +85,10 @@ pub fn create_level_checkpoints(level: usize) -> Vec<Checkpoint> {
             checkpoints.push(Checkpoint::new(1800.0, 490.0));
             checkpoints.push(Checkpoint::new(2600.0, 490.0));
         }
+        5 => {
+            checkpoints.push(Checkpoint::new(1400.0, 490.0));
+            checkpoints.push(Checkpoint::new(3000.0, 490.0));
+        }
         _ => {}
     }
     

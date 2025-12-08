@@ -143,6 +143,26 @@ pub fn create_level_coins(level: usize) -> Vec<Coin> {
             coins.push(Coin::new(2600.0, 320.0));
             coins.push(Coin::new(2750.0, 270.0));
         }
+        5 => {
+            coins.push(Coin::new(250.0, 470.0));
+            coins.push(Coin::new(500.0, 420.0));
+            coins.push(Coin::new(750.0, 360.0));
+            coins.push(Coin::new(1000.0, 310.0));
+            coins.push(Coin::new(1300.0, 390.0));
+            coins.push(Coin::new(1550.0, 290.0));
+            coins.push(Coin::new(1750.0, 230.0));
+            coins.push(Coin::new(1950.0, 180.0));
+            coins.push(Coin::new(2200.0, 420.0));
+            coins.push(Coin::new(2450.0, 360.0));
+            coins.push(Coin::new(2650.0, 300.0));
+            coins.push(Coin::new(2850.0, 240.0));
+            coins.push(Coin::new(3050.0, 480.0));
+            coins.push(Coin::new(3250.0, 420.0));
+            coins.push(Coin::new(3450.0, 360.0));
+            coins.push(Coin::new(3650.0, 300.0));
+            coins.push(Coin::new(3850.0, 240.0));
+            coins.push(Coin::new(4050.0, 200.0));
+        }
         _ => {}
     }
     
