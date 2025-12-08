@@ -78,6 +78,7 @@ impl Player {
         }
     }
 
+    #[allow(dead_code)]
     pub fn handle_movement(&mut self) {
         if is_key_down(KeyCode::Left) || is_key_down(KeyCode::A) {
             self.vel_x = -PLAYER_SPEED;
@@ -98,13 +99,14 @@ impl Player {
         }
     }
 
+    #[allow(dead_code)]
     pub fn handle_jump(&mut self) -> bool {
-        if is_key_down(KeyCode::Space) || is_key_down(KeyCode::Up) || is_key_down(KeyCode::W) {
-            if self.on_ground {
-                self.vel_y = JUMP_FORCE;
-                self.on_ground = false;
-                return true;
-            }
+        if (is_key_down(KeyCode::Space) || is_key_down(KeyCode::Up) || is_key_down(KeyCode::W))
+            && self.on_ground
+        {
+            self.vel_y = JUMP_FORCE;
+            self.on_ground = false;
+            return true;
         }
         false
     }

@@ -31,10 +31,12 @@ impl AudioManager {
         }
     }
     
+    #[allow(dead_code)]
     pub fn is_enabled(&self) -> bool {
         self.sounds_enabled
     }
     
+    #[allow(dead_code)]
     pub fn toggle(&mut self) -> bool {
         self.sounds_enabled = !self.sounds_enabled;
         self.sounds_enabled

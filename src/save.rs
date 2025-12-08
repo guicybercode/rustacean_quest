@@ -26,6 +26,7 @@ pub struct SaveData {
 }
 
 impl SaveData {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         let mut unlocked_levels = vec![false; crate::constants::MAX_LEVELS];
         unlocked_levels[0] = true;

@@ -74,6 +74,7 @@ pub struct Game {
     sound_enabled: bool,
     resolution_index: usize,
     available_resolutions: Vec<(u32, u32)>,
+    #[allow(dead_code)]
     fullscreen: bool, 
     score: u32, 
     lives: u32, 
@@ -122,6 +123,7 @@ pub struct Game {
     controls_waiting_input: Option<(usize, ControlAction)>,
     error_message: Option<String>,
     error_timer: f32,
+    #[allow(dead_code)]
     asset_load_errors: Vec<String>,
     difficulty_multiplier: f32,
     colorblind_mode: bool,
@@ -350,6 +352,7 @@ impl Game {
         self.versus_played = save_data.versus_played;
         Ok(())
     }
+    #[allow(dead_code)]
     fn has_save_file(&self) -> bool {
         for slot in 0..3 {
             let path = SaveData::get_save_path(slot);
