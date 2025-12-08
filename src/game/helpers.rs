@@ -1,13 +1,13 @@
+use crate::coin::create_level_coins;
 use crate::constants::*;
-use crate::coin::{create_level_coins, Coin};
 use crate::enemy::Enemy;
 use crate::platform::Platform;
 use crate::player::Player;
 use crate::save::SaveData;
-use crate::systems::{Particle, CoinBounce};
+use crate::systems::{CoinBounce, Particle};
 use macroquad::prelude::*;
 
-use super::{Game, GameState, PlayerControls, ControlAction};
+use super::{ControlAction, Game, GameState, PlayerControls};
 
 impl Game {
     pub fn get_common_resolutions() -> Vec<(u32, u32)> {
@@ -364,10 +364,10 @@ impl Game {
         restored_time: Option<f32>,
         restored_coins: Option<u32>,
     ) {
-        use crate::checkpoint::create_level_checkpoints;
-        use crate::platform::create_level_platforms;
-        use crate::enemy::create_level_enemies;
         use crate::camera::Camera;
+        use crate::checkpoint::create_level_checkpoints;
+        use crate::enemy::create_level_enemies;
+        use crate::platform::create_level_platforms;
 
         let platforms = create_level_platforms(level);
         let coins = create_level_coins(level);
@@ -505,4 +505,3 @@ impl Game {
         self.camera = Camera::new();
     }
 }
-
