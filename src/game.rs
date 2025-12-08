@@ -337,9 +337,16 @@ impl Game {
         self.player_name.to_lowercase() == "guicybercode"
     }
     fn start_transition(&mut self, target_state: GameState) {
-        self.transition_timer = 0.001;
-        self.transition_alpha = 1.0;
-        self.transition_target_state = Some(target_state);
+        if matches!(self.state, GameState::Menu) {
+            self.state = target_state;
+            self.transition_timer = 0.0;
+            self.transition_alpha = 0.0;
+            self.transition_target_state = None;
+        } else {
+            self.transition_timer = 0.0;
+            self.transition_alpha = 1.0;
+            self.transition_target_state = Some(target_state);
+        }
     }
     fn transition_to_menu(&mut self) {
         if !self.splash_shown {
@@ -604,9 +611,7 @@ impl Game {
     }
     pub fn update(&mut self, dt: f32) {
         self.update_transition(dt);
-        if self.transition_target_state.is_some() {
-            return;
-        }
+        
         if matches!(self.state, GameState::Menu) {
             self.save_check_timer += dt;
             if self.save_check_timer >= 2.0 {
@@ -616,6 +621,11 @@ impl Game {
         } else {
             self.save_check_timer = 0.0;
         }
+        
+        if self.transition_target_state.is_some() && !matches!(self.state, GameState::Menu) {
+            return;
+        }
+        
         match self.state {
             GameState::Splash => {
                 self.splash_timer += dt;
