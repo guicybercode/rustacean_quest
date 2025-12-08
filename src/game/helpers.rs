@@ -70,12 +70,12 @@ impl Game {
             tutorial_completed: self.tutorial_completed,
             versus_played: self.versus_played,
         };
-        let path = SaveData::get_save_path(slot);
+        let path = SaveData::get_save_path(slot)?;
         save_data.save_to_file(&path)
     }
 
     pub fn load_game(&mut self, slot: usize) -> Result<(), String> {
-        let path = SaveData::get_save_path(slot);
+        let path = SaveData::get_save_path(slot)?;
         let save_data = SaveData::load_from_file(&path)?;
         self.current_level = save_data.current_level;
         self.unlocked_levels = save_data.unlocked_levels;

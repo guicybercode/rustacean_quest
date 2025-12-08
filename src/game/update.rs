@@ -173,27 +173,43 @@ impl Game {
                         }
                     }
                     if is_key_pressed(KeyCode::Enter) {
-                        let path = SaveData::get_save_path(self.continue_selection);
-                        if SaveData::save_exists(&path) {
-                            if let Err(e) = self.load_game(self.continue_selection) {
-                                let error_msg = format!("Error loading save: {}", e);
+                        match SaveData::get_save_path(self.continue_selection) {
+                            Ok(path) => {
+                                if SaveData::save_exists(&path) {
+                                    if let Err(e) = self.load_game(self.continue_selection) {
+                                        let error_msg = format!("Error loading save: {}", e);
+                                        eprintln!("{}", error_msg);
+                                        self.show_error(error_msg);
+                                    } else {
+                                        self.load_level(
+                                            self.current_level,
+                                            self.last_checkpoint_pos.is_some(),
+                                            Some(self.time_remaining),
+                                            Some(self.coins_collected),
+                                        );
+                                        self.start_transition(GameState::Playing);
+                                    }
+                                }
+                            }
+                            Err(e) => {
+                                let error_msg = format!("Error resolving save path: {}", e);
                                 eprintln!("{}", error_msg);
                                 self.show_error(error_msg);
-                            } else {
-                                self.load_level(
-                                    self.current_level,
-                                    self.last_checkpoint_pos.is_some(),
-                                    Some(self.time_remaining),
-                                    Some(self.coins_collected),
-                                );
-                                self.start_transition(GameState::Playing);
                             }
                         }
                     }
                     if is_key_pressed(KeyCode::Delete) || is_key_pressed(KeyCode::Backspace) {
-                        let path = SaveData::get_save_path(self.continue_selection);
-                        if SaveData::save_exists(&path) {
-                            self.continue_mode = ContinueMode::DeleteConfirm;
+                        match SaveData::get_save_path(self.continue_selection) {
+                            Ok(path) => {
+                                if SaveData::save_exists(&path) {
+                                    self.continue_mode = ContinueMode::DeleteConfirm;
+                                }
+                            }
+                            Err(e) => {
+                                let error_msg = format!("Error resolving save path: {}", e);
+                                eprintln!("{}", error_msg);
+                                self.show_error(error_msg);
+                            }
                         }
                     }
                     if is_key_pressed(KeyCode::Escape) {
