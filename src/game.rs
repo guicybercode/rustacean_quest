@@ -12,10 +12,12 @@ use crate::constants::*;
 use crate::name_filter;
 
 pub enum GameState {
+    Splash,
     Menu,
     MenuExitConfirm, 
     Credits,
     Settings,
+    Controls,
     LevelSelect,
     Playing,
     GameOver,
@@ -27,6 +29,23 @@ pub enum GameState {
     NameInput, 
     Tutorial, 
     Pause, 
+}
+
+#[derive(Clone, Copy, PartialEq)]
+pub enum ControlAction {
+    Left,
+    Right,
+    Jump,
+}
+
+#[derive(Clone)]
+pub struct PlayerControls {
+    pub left: Option<KeyCode>,
+    pub right: Option<KeyCode>,
+    pub jump: Option<KeyCode>,
+    pub left_gamepad: Option<u8>,
+    pub right_gamepad: Option<u8>,
+    pub jump_gamepad: Option<u8>,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -56,7 +75,9 @@ pub struct Game {
     
     settings_selection: usize, 
     sound_enabled: bool,
-    resolution_index: usize, 
+    resolution_index: usize,
+    available_resolutions: Vec<(u32, u32)>,
+    fullscreen: bool, 
     
     score: u32, 
     
@@ -102,6 +123,15 @@ pub struct Game {
     player_sprite_texture_p1: Option<std::rc::Rc<Texture2D>>, 
     player_sprite_texture_p2: Option<std::rc::Rc<Texture2D>>, 
     enemy_textures: Vec<std::rc::Rc<Texture2D>>,
+    
+    splash_timer: f32,
+    previous_menu_selection: usize,
+    
+    player1_controls: PlayerControls,
+    player2_controls: PlayerControls,
+    controls_selection: usize,
+    controls_player: usize,
+    controls_waiting_input: Option<(usize, ControlAction)>,
 }
 
 impl Game {
@@ -162,7 +192,7 @@ impl Game {
             checkpoints: Vec::new(),
             camera: Camera::new(),
             audio,
-            state: GameState::Menu,
+            state: GameState::Splash,
             coins_collected: 0,
             total_coins: 0,
             menu_selection: 0,
@@ -175,7 +205,9 @@ impl Game {
             
             settings_selection: 0,
             sound_enabled: true,
-            resolution_index: 0, 
+            resolution_index: 0,
+            available_resolutions: Self::get_common_resolutions(),
+            fullscreen: false, 
             
             score: 0,
             
@@ -221,7 +253,44 @@ impl Game {
             player_sprite_texture_p1,
             player_sprite_texture_p2,
             enemy_textures,
+            
+            splash_timer: 0.0,
+            previous_menu_selection: 0,
+            
+            player1_controls: PlayerControls {
+                left: Some(KeyCode::A),
+                right: Some(KeyCode::D),
+                jump: Some(KeyCode::W),
+                left_gamepad: None,
+                right_gamepad: None,
+                jump_gamepad: None,
+            },
+            player2_controls: PlayerControls {
+                left: Some(KeyCode::Left),
+                right: Some(KeyCode::Right),
+                jump: Some(KeyCode::Up),
+                left_gamepad: None,
+                right_gamepad: None,
+                jump_gamepad: None,
+            },
+            controls_selection: 0,
+            controls_player: 1,
+            controls_waiting_input: None,
         }
+    }
+    
+    fn get_common_resolutions() -> Vec<(u32, u32)> {
+        vec![
+            (800, 600),
+            (1024, 768),
+            (1280, 720),
+            (1280, 1024),
+            (1366, 768),
+            (1600, 900),
+            (1920, 1080),
+            (2560, 1440),
+            (3840, 2160),
+        ]
     }
     
     
@@ -246,8 +315,10 @@ impl Game {
     }
 
     fn apply_resolution(&self) {
-        let (width, height) = RESOLUTIONS[self.resolution_index];
-        request_new_screen_size(width as f32, height as f32);
+        if self.resolution_index < self.available_resolutions.len() {
+            let (width, height) = self.available_resolutions[self.resolution_index];
+            request_new_screen_size(width as f32, height as f32);
+        }
     }
 
     fn save_game(&self, slot: usize) -> Result<(), String> {
@@ -317,6 +388,25 @@ impl Game {
         self.transition_timer = 0.001;
         self.transition_alpha = 1.0;
         self.transition_target_state = Some(target_state);
+    }
+    
+    fn transition_to_menu(&mut self) {
+        self.splash_timer = 0.0;
+        self.start_transition(GameState::Splash);
+    }
+    
+    fn is_control_pressed(&self, controls: &PlayerControls, action: ControlAction) -> bool {
+        match action {
+            ControlAction::Left => {
+                controls.left.map(|k| is_key_down(k)).unwrap_or(false)
+            }
+            ControlAction::Right => {
+                controls.right.map(|k| is_key_down(k)).unwrap_or(false)
+            }
+            ControlAction::Jump => {
+                controls.jump.map(|k| is_key_down(k)).unwrap_or(false)
+            }
+        }
     }
 
     
@@ -671,6 +761,19 @@ impl Game {
         
         
         match self.state {
+            GameState::Splash => {
+                self.splash_timer += dt;
+                
+                if self.splash_timer >= SPLASH_DURATION {
+                    self.state = GameState::Menu;
+                    self.splash_timer = 0.0;
+                }
+                
+                if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) || is_key_pressed(KeyCode::Escape) {
+                    self.state = GameState::Menu;
+                    self.splash_timer = 0.0;
+                }
+            }
             GameState::Menu => {
                 
                 self.menu_animation_time += dt * MENU_ANIMATION_SPEED;
@@ -689,6 +792,10 @@ impl Game {
                         self.menu_animation_time = 0.0; 
                         self.audio.play_menu_select();
                     }
+                }
+                
+                if self.previous_menu_selection != self.menu_selection {
+                    self.previous_menu_selection = self.menu_selection;
                 }
                 
                 
@@ -857,7 +964,7 @@ impl Game {
                     }
                 }
                 if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
-                    if self.settings_selection < 3 { 
+                    if self.settings_selection < 4 { 
                         self.settings_selection += 1;
                         self.audio.play_menu_select();
                     }
@@ -893,7 +1000,7 @@ impl Game {
                         }
                         1 => {
                             
-                            if self.resolution_index < RESOLUTIONS.len() - 1 {
+                            if self.resolution_index < self.available_resolutions.len() - 1 {
                                 self.resolution_index += 1;
                                 self.apply_resolution();
                                 self.audio.play_menu_select();
@@ -912,7 +1019,13 @@ impl Game {
                             self.audio.set_enabled(self.sound_enabled);
                             self.audio.play_menu_select();
                         }
-                        3 => {
+                        2 => {
+                            self.state = GameState::Controls;
+                            self.controls_selection = 0;
+                            self.controls_player = 1;
+                            self.controls_waiting_input = None;
+                        }
+                        4 => {
                             
                             self.audio.play_menu_select();
                             if self.came_from_pause {
@@ -940,6 +1053,95 @@ impl Game {
                         
                         self.state = GameState::Menu;
                         self.menu_selection = 0;
+                    }
+                }
+            }
+            GameState::Controls => {
+                if let Some((player, action)) = self.controls_waiting_input {
+                    let mut _captured = false;
+                    
+                    let keys_to_check = [
+                        KeyCode::A, KeyCode::B, KeyCode::C, KeyCode::D, KeyCode::E, KeyCode::F,
+                        KeyCode::G, KeyCode::H, KeyCode::I, KeyCode::J, KeyCode::K, KeyCode::L,
+                        KeyCode::M, KeyCode::N, KeyCode::O, KeyCode::P, KeyCode::Q, KeyCode::R,
+                        KeyCode::S, KeyCode::T, KeyCode::U, KeyCode::V, KeyCode::W, KeyCode::X,
+                        KeyCode::Y, KeyCode::Z,
+                        KeyCode::Space, KeyCode::Enter, KeyCode::Escape,
+                        KeyCode::Left, KeyCode::Right, KeyCode::Up, KeyCode::Down,
+                        KeyCode::Key0, KeyCode::Key1, KeyCode::Key2, KeyCode::Key3, KeyCode::Key4,
+                        KeyCode::Key5, KeyCode::Key6, KeyCode::Key7, KeyCode::Key8, KeyCode::Key9,
+                    ];
+                    
+                    for &keycode in &keys_to_check {
+                        if is_key_pressed(keycode) {
+                            let controls = if player == 1 {
+                                &mut self.player1_controls
+                            } else {
+                                &mut self.player2_controls
+                            };
+                            
+                            match action {
+                                ControlAction::Left => controls.left = Some(keycode),
+                                ControlAction::Right => controls.right = Some(keycode),
+                                ControlAction::Jump => controls.jump = Some(keycode),
+                            }
+                            
+                            self.controls_waiting_input = None;
+                            self.audio.play_menu_select();
+                            _captured = true;
+                            break;
+                        }
+                    }
+                    
+                    // Gamepad support can be added here when macroquad gamepad API is available
+                    
+                    if is_key_pressed(KeyCode::Escape) {
+                        self.controls_waiting_input = None;
+                        self.audio.play_menu_select();
+                    }
+                } else {
+                    if is_key_pressed(KeyCode::Left) || is_key_pressed(KeyCode::A) {
+                        if self.controls_selection > 0 {
+                            self.controls_selection -= 1;
+                            self.audio.play_menu_select();
+                        }
+                    }
+                    if is_key_pressed(KeyCode::Right) || is_key_pressed(KeyCode::D) {
+                        if self.controls_selection < 2 {
+                            self.controls_selection += 1;
+                            self.audio.play_menu_select();
+                        }
+                    }
+                    if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
+                        if self.controls_player == 2 {
+                            self.controls_player = 1;
+                            self.controls_selection = 0;
+                            self.audio.play_menu_select();
+                        }
+                    }
+                    if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
+                        if self.controls_player == 1 {
+                            self.controls_player = 2;
+                            self.controls_selection = 0;
+                            self.audio.play_menu_select();
+                        }
+                    }
+                    
+                    if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+                        let action = match self.controls_selection {
+                            0 => ControlAction::Left,
+                            1 => ControlAction::Right,
+                            2 => ControlAction::Jump,
+                            _ => return,
+                        };
+                        self.controls_waiting_input = Some((self.controls_player, action));
+                        self.audio.play_menu_select();
+                    }
+                    
+                    if is_key_pressed(KeyCode::Escape) {
+                        self.state = GameState::Settings;
+                        self.controls_waiting_input = None;
+                        self.audio.play_menu_select();
                     }
                 }
             }
@@ -1047,7 +1249,7 @@ impl Game {
                 
                 
                 if is_key_pressed(KeyCode::Escape) {
-                    self.state = GameState::Menu;
+                    self.transition_to_menu();
                     self.menu_selection = 0;
                     return;
                 }
@@ -1071,7 +1273,9 @@ impl Game {
                 
                 
                 
-                self.player.handle_movement();
+                let p1_left = self.is_control_pressed(&self.player1_controls, ControlAction::Left);
+                let p1_right = self.is_control_pressed(&self.player1_controls, ControlAction::Right);
+                self.player.handle_movement_custom(p1_left, p1_right);
                 
                 
                 self.player.update(dt);
@@ -1094,7 +1298,8 @@ impl Game {
                 Self::check_player_platform_collisions(&mut self.player, &self.platforms, (px, py, pw, ph));
                 
                 
-                let jumped = self.player.handle_jump();
+                let p1_jump = self.is_control_pressed(&self.player1_controls, ControlAction::Jump);
+                let jumped = self.player.handle_jump_custom(p1_jump);
                 
                 
                 if jumped {
@@ -1266,7 +1471,7 @@ impl Game {
             GameState::Versus => {
                 
                 if is_key_pressed(KeyCode::Escape) {
-                    self.state = GameState::Menu;
+                    self.transition_to_menu();
                     self.menu_selection = 0;
                     self.player2 = None;
                     return;
@@ -1312,9 +1517,9 @@ impl Game {
                 
                 
                 if self.respawn_timer_p1 <= 0.0 {
-                    let p1_left = is_key_down(KeyCode::A);
-                    let p1_right = is_key_down(KeyCode::D);
-                    let p1_jump = is_key_down(KeyCode::W) || is_key_down(KeyCode::Space);
+                    let p1_left = self.is_control_pressed(&self.player1_controls, ControlAction::Left);
+                    let p1_right = self.is_control_pressed(&self.player1_controls, ControlAction::Right);
+                    let p1_jump = self.is_control_pressed(&self.player1_controls, ControlAction::Jump);
                     let use_easter_egg = self.is_easter_egg();
                     let jumped = Self::update_versus_player_physics(
                         &mut self.player,
@@ -1341,12 +1546,13 @@ impl Game {
                 }
                 
                 
+                let p2_controls = self.player2_controls.clone();
+                let p2_left = self.is_control_pressed(&p2_controls, ControlAction::Left);
+                let p2_right = self.is_control_pressed(&p2_controls, ControlAction::Right);
+                let p2_jump = self.is_control_pressed(&p2_controls, ControlAction::Jump);
+                
                 if let Some(ref mut p2) = self.player2 {
                     if self.respawn_timer_p2 <= 0.0 {
-                        let p2_left = is_key_down(KeyCode::Left);
-                        let p2_right = is_key_down(KeyCode::Right);
-                        let p2_jump = is_key_down(KeyCode::Up);
-                        
                         let jumped = Self::update_versus_player_physics(
                             p2,
                             p2_left,
@@ -1693,6 +1899,42 @@ impl Game {
         clear_background(WHITE);
         
         match self.state {
+            GameState::Splash => {
+                let progress = (self.splash_timer / SPLASH_DURATION).min(1.0);
+                let fade_in = if progress < 0.5 {
+                    progress * 2.0
+                } else if progress > 0.7 {
+                    1.0 - ((progress - 0.7) / 0.3)
+                } else {
+                    1.0
+                };
+                
+                let title = "JUMP QUEST";
+                let title_size = MENU_TITLE_SIZE * 1.2;
+                let title_width = measure_text(title, None, title_size as u16, 1.0).width;
+                let title_color = Color::new(0.0, 0.0, 0.0, fade_in);
+                
+                draw_text(
+                    title,
+                    screen_width() / 2.0 - title_width / 2.0,
+                    screen_height() / 2.0,
+                    title_size,
+                    title_color,
+                );
+                
+                let version_text = format!("v{}", GAME_VERSION);
+                let version_size = MENU_VERSION_SIZE;
+                let version_width = measure_text(&version_text, None, version_size as u16, 1.0).width;
+                let version_color = Color::new(0.5, 0.5, 0.5, fade_in * 0.7);
+                
+                draw_text(
+                    &version_text,
+                    screen_width() / 2.0 - version_width / 2.0,
+                    screen_height() / 2.0 + 80.0,
+                    version_size,
+                    version_color,
+                );
+            }
             GameState::Menu => {
                 
                 let title = "JUMP QUEST";
@@ -2143,10 +2385,13 @@ impl Game {
                 let spacing = 60.0;
                 
                 
-                let resolution_names = ["800x600", "1024x768", "1280x720"];
-                
-                
-                let safe_resolution_index = self.resolution_index.min(RESOLUTIONS.len().saturating_sub(1));
+                let safe_resolution_index = self.resolution_index.min(self.available_resolutions.len().saturating_sub(1));
+                let res_name = if safe_resolution_index < self.available_resolutions.len() {
+                    let (w, h) = self.available_resolutions[safe_resolution_index];
+                    format!("{}x{}", w, h)
+                } else {
+                    "Unknown".to_string()
+                };
                 
                 
                 let sound_text = format!("SOUND: {}", if self.sound_enabled { "ON" } else { "OFF" });
@@ -2159,7 +2404,7 @@ impl Game {
                 draw_text(&sound_text, screen_width() / 2.0 - sound_width / 2.0, start_y, option_size, sound_color);
                 
                 
-                let res_text = format!("RESOLUTION: {}", resolution_names[safe_resolution_index]);
+                let res_text = format!("RESOLUTION: {}", res_name);
                 let res_color = if self.settings_selection == 1 { BLACK } else { GRAY };
                 let res_width = measure_text(&res_text, None, option_size as u16, 1.0).width;
                 if self.settings_selection == 1 {
@@ -2219,6 +2464,108 @@ impl Game {
                     inst_size,
                     GRAY,
                 );
+            }
+            GameState::Controls => {
+                let title = "CONTROLS";
+                let title_size = 48.0;
+                let title_width = measure_text(title, None, title_size as u16, 1.0).width;
+                draw_text(
+                    title,
+                    screen_width() / 2.0 - title_width / 2.0,
+                    80.0,
+                    title_size,
+                    BLACK,
+                );
+                
+                if let Some((player, action)) = self.controls_waiting_input {
+                    let waiting_text = format!("Press key for Player {} {}...", 
+                        player, 
+                        match action {
+                            ControlAction::Left => "LEFT",
+                            ControlAction::Right => "RIGHT",
+                            ControlAction::Jump => "JUMP",
+                        });
+                    let waiting_width = measure_text(&waiting_text, None, 32, 1.0).width;
+                    draw_text(
+                        &waiting_text,
+                        screen_width() / 2.0 - waiting_width / 2.0,
+                        screen_height() / 2.0,
+                        32.0,
+                        RED,
+                    );
+                    let esc_text = "Press ESC to cancel";
+                    let esc_width = measure_text(esc_text, None, 20, 1.0).width;
+                    draw_text(
+                        esc_text,
+                        screen_width() / 2.0 - esc_width / 2.0,
+                        screen_height() / 2.0 + 50.0,
+                        20.0,
+                        GRAY,
+                    );
+                } else {
+                    let option_size = 28.0;
+                    let start_y = 180.0;
+                    let spacing = 50.0;
+                    
+                    let player_text = format!("PLAYER {}", self.controls_player);
+                    let player_color = BLACK;
+                    let player_width = measure_text(&player_text, None, 36, 1.0).width;
+                    draw_text(
+                        &player_text,
+                        screen_width() / 2.0 - player_width / 2.0,
+                        start_y,
+                        36.0,
+                        player_color,
+                    );
+                    
+                    let controls = if self.controls_player == 1 {
+                        &self.player1_controls
+                    } else {
+                        &self.player2_controls
+                    };
+                    
+                    let actions = [
+                        ("LEFT", controls.left, controls.left_gamepad),
+                        ("RIGHT", controls.right, controls.right_gamepad),
+                        ("JUMP", controls.jump, controls.jump_gamepad),
+                    ];
+                    
+                    for (i, (action_name, key, gamepad)) in actions.iter().enumerate() {
+                        let y = start_y + 80.0 + (i as f32 * spacing);
+                        let color = if i == self.controls_selection { BLACK } else { GRAY };
+                        
+                        let key_name = key.map(|k| format!("{:?}", k)).unwrap_or_else(|| "None".to_string());
+                        let gamepad_text = gamepad.map(|g| format!("GP{}", g)).unwrap_or_else(|| "".to_string());
+                        let binding_text = if !gamepad_text.is_empty() {
+                            format!("{}: {} / {}", action_name, key_name, gamepad_text)
+                        } else {
+                            format!("{}: {}", action_name, key_name)
+                        };
+                        
+                        if i == self.controls_selection {
+                            draw_text(">", screen_width() / 2.0 - 200.0, y, option_size, BLACK);
+                        }
+                        
+                        let binding_width = measure_text(&binding_text, None, option_size as u16, 1.0).width;
+                        draw_text(
+                            &binding_text,
+                            screen_width() / 2.0 - binding_width / 2.0,
+                            y,
+                            option_size,
+                            color,
+                        );
+                    }
+                    
+                    let instructions = "UP/DOWN: Select Player | LEFT/RIGHT: Select Action | ENTER: Rebind | ESC: Back";
+                    let inst_width = measure_text(instructions, None, 16, 1.0).width;
+                    draw_text(
+                        instructions,
+                        screen_width() / 2.0 - inst_width / 2.0,
+                        screen_height() - 40.0,
+                        16.0,
+                        GRAY,
+                    );
+                }
             }
             GameState::Credits => {
                 

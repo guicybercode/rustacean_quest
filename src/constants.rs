@@ -75,6 +75,7 @@ pub const GAME_VERSION: &str = "0.3.14";     // Versão do jogo
 
 // === TRANSIÇÕES ===
 pub const TRANSITION_DURATION: f32 = 1.0;    // Duração da transição entre telas (em segundos)
+pub const SPLASH_DURATION: f32 = 2.0;        // Duração da tela de splash (em segundos)
 
 // === TUTORIAL ===
 pub const TUTORIAL_PAGE_COUNT: usize = 5;    // Número de páginas do tutorial
