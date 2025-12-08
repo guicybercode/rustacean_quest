@@ -76,8 +76,8 @@ impl SaveData {
     }
 
     pub fn list_all_saves() -> Vec<(usize, Option<SaveData>)> {
-        let mut saves = Vec::new();
-        for slot in 0..3 {
+        let mut saves = Vec::with_capacity(crate::constants::MAX_SAVE_SLOTS);
+        for slot in 0..crate::constants::MAX_SAVE_SLOTS {
             let path = Self::get_save_path(slot);
             if Self::save_exists(&path) {
                 match Self::load_from_file(&path) {

@@ -72,7 +72,7 @@ impl Platform {
 }
 
 pub fn create_level_platforms(level: usize) -> Vec<Platform> {
-    let mut platforms = Vec::new();
+    let mut platforms = Vec::with_capacity(crate::constants::ESTIMATED_PLATFORMS_PER_LEVEL);
     
     match level {
         1 => {

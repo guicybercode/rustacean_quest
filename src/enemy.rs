@@ -57,9 +57,8 @@ impl Enemy {
         self.facing_right = self.vel_x >= 0.0;
 
         if self.texture.is_some() && self.on_ground {
-            const ANIMATION_SPEED: f32 = 0.12;
             self.anim_timer += dt;
-            if self.anim_timer >= ANIMATION_SPEED {
+            if self.anim_timer >= crate::constants::ENEMY_ANIMATION_SPEED {
                 self.anim_timer = 0.0;
                 self.anim_frame = (self.anim_frame + 1) % 4;
             }
@@ -91,9 +90,9 @@ impl Enemy {
             } else {
                 self.vel_x = -self.vel_x;
                 if self.vel_x > 0.0 {
-                    self.x = platform.x + platform.width + 1.0;
+                    self.x = platform.x + platform.width + crate::constants::ENEMY_COLLISION_PLATFORM_OFFSET;
                 } else {
-                    self.x = platform.x - self.width - 1.0;
+                    self.x = platform.x - self.width - crate::constants::ENEMY_COLLISION_PLATFORM_OFFSET;
                 }
             }
         }
@@ -106,13 +105,13 @@ impl Enemy {
         }
         
         let check_offset_x = if self.vel_x > 0.0 {
-            self.width + 2.0
+            self.width + crate::constants::ENEMY_EDGE_CHECK_OFFSET
         } else {
-            -2.0
+            -crate::constants::ENEMY_EDGE_CHECK_OFFSET
         };
         
         let check_x = self.x + check_offset_x;
-        let check_y = self.y + self.height + 15.0;
+        let check_y = self.y + self.height + crate::constants::ENEMY_EDGE_CHECK_Y_OFFSET;
         
         let mut found_platform_below = false;
         
@@ -130,9 +129,9 @@ impl Enemy {
         if !found_platform_below {
             self.vel_x = -self.vel_x;
             if self.vel_x > 0.0 {
-                self.x += 2.0;
+                self.x += crate::constants::ENEMY_EDGE_CHECK_OFFSET;
             } else {
-                self.x -= 2.0;
+                self.x -= crate::constants::ENEMY_EDGE_CHECK_OFFSET;
             }
         }
     }
@@ -166,9 +165,9 @@ impl Enemy {
             let enemy_top = self.y;
             let enemy_center_y = self.y + self.height / 2.0;
             
-            let is_on_top = player_vel_y >= -50.0 && player_bottom <= enemy_center_y + 10.0;
+            let is_on_top = player_vel_y >= crate::constants::PLAYER_COLLISION_VELOCITY_THRESHOLD && player_bottom <= enemy_center_y + crate::constants::PLAYER_ENEMY_TOP_COLLISION_THRESHOLD;
             
-            let is_falling_on_top = player_vel_y > 0.0 && player_bottom <= enemy_top + self.height * 0.7;
+            let is_falling_on_top = player_vel_y > 0.0 && player_bottom <= enemy_top + self.height * crate::constants::PLAYER_ENEMY_FALLING_THRESHOLD;
             
             if is_on_top || is_falling_on_top {
                 self.alive = false;
@@ -219,7 +218,7 @@ impl Enemy {
 }
 
 pub fn create_level_enemies(level: usize, textures: Option<&[Rc<Texture2D>]>) -> Vec<Enemy> {
-    let mut enemies = Vec::new();
+    let mut enemies = Vec::with_capacity(crate::constants::ESTIMATED_ENEMIES_PER_LEVEL);
 
     let texture_for = |idx: usize| -> Option<Rc<Texture2D>> {
         textures.and_then(|t| t.get(idx % t.len()).cloned())

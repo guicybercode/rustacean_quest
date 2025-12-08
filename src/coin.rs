@@ -66,7 +66,7 @@ impl Coin {
 }
 
 pub fn create_level_coins(level: usize) -> Vec<Coin> {
-    let mut coins = Vec::new();
+    let mut coins = Vec::with_capacity(crate::constants::ESTIMATED_COINS_PER_LEVEL);
     
     match level {
         1 => {

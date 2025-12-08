@@ -48,7 +48,7 @@ impl Checkpoint {
 }
 
 pub fn create_level_checkpoints(level: usize) -> Vec<Checkpoint> {
-    let mut checkpoints = Vec::new();
+    let mut checkpoints = Vec::with_capacity(crate::constants::ESTIMATED_CHECKPOINTS_PER_LEVEL);
     
     match level {
         1 => {

@@ -61,3 +61,48 @@ pub const TRANSITION_DURATION: f32 = 1.0;
 pub const SPLASH_DURATION: f32 = 2.0;
 
 pub const TUTORIAL_PAGE_COUNT: usize = 5;
+
+pub const DEFAULT_LIVES: u32 = 5;
+pub const EASTER_EGG_LIVES: u32 = 15;
+pub const RESPAWN_TIMER: f32 = 3.0;
+pub const GAME_OVER_FADE_TIMER: f32 = 2.0;
+pub const LEVEL_START_FADE_TIMER: f32 = 1.5;
+pub const FOOTSTEP_INTERVAL: f32 = 0.25;
+pub const MIN_VELOCITY_FOR_FOOTSTEP: f32 = 10.0;
+pub const SAVE_CHECK_INTERVAL: f32 = 2.0;
+pub const MAX_SAVE_SLOTS: usize = 3;
+pub const MAX_NAME_LENGTH: usize = 20;
+pub const MIN_NAME_LENGTH: usize = 3;
+pub const ENEMY_ANIMATION_SPEED: f32 = 0.12;
+pub const PLAYER_ANIMATION_SPEED: f32 = 0.08;
+pub const MIN_VELOCITY_FOR_ANIMATION: f32 = 5.0;
+pub const WALK_BOUNCE_SPEED: f32 = 12.0;
+pub const JUMP_BOUNCE_MULTIPLIER: f32 = 0.6;
+pub const ENEMY_EDGE_CHECK_OFFSET: f32 = 2.0;
+pub const ENEMY_EDGE_CHECK_Y_OFFSET: f32 = 15.0;
+pub const ENEMY_COLLISION_PLATFORM_OFFSET: f32 = 1.0;
+pub const PLAYER_COLLISION_VELOCITY_THRESHOLD: f32 = -50.0;
+pub const PLAYER_ENEMY_TOP_COLLISION_THRESHOLD: f32 = 10.0;
+pub const PLAYER_ENEMY_FALLING_THRESHOLD: f32 = 0.7;
+pub const ESTIMATED_ENEMIES_PER_LEVEL: usize = 20;
+pub const ESTIMATED_PLATFORMS_PER_LEVEL: usize = 20;
+pub const ESTIMATED_COINS_PER_LEVEL: usize = 30;
+pub const ESTIMATED_CHECKPOINTS_PER_LEVEL: usize = 5;
+
+pub const DIFFICULTY_EASY: f32 = 1.0;
+pub const DIFFICULTY_NORMAL: f32 = 1.0;
+pub const DIFFICULTY_HARD: f32 = 0.7;
+pub const DIFFICULTY_INSANE: f32 = 0.5;
+
+pub const CAMERA_SHAKE_INTENSITY: f32 = 5.0;
+pub const CAMERA_SHAKE_DURATION: f32 = 0.2;
+
+pub const PARTICLE_COUNT: usize = 10;
+pub const PARTICLE_LIFETIME: f32 = 0.5;
+
+pub const FONT_SIZE_SMALL: f32 = 16.0;
+pub const FONT_SIZE_MEDIUM: f32 = 24.0;
+pub const FONT_SIZE_LARGE: f32 = 32.0;
+pub const FONT_SIZE_EXTRA_LARGE: f32 = 48.0;
+
+pub const ASSIST_MODE_SLOW_MOTION: f32 = 0.5;

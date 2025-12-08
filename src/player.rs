@@ -53,8 +53,7 @@ impl Player {
         self.x += self.vel_x * dt;
         self.y += self.vel_y * dt;
         
-        const WALK_BOUNCE_SPEED: f32 = 12.0;
-        self.walk_bounce_timer += dt * WALK_BOUNCE_SPEED;
+        self.walk_bounce_timer += dt * crate::constants::WALK_BOUNCE_SPEED;
         
         if self.vel_x.abs() < 1.0 {
             self.walk_bounce_timer = 0.0;
