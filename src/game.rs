@@ -648,6 +648,13 @@ impl Game {
                 self.error_message = None;
             }
         }
+        self.particles.iter_mut().for_each(|p| p.4 -= dt);
+        self.particles.retain(|p| p.4 > 0.0);
+        let max_particles = PARTICLE_COUNT * 20;
+        if self.particles.len() > max_particles {
+            let excess = self.particles.len() - max_particles;
+            self.particles.drain(0..excess);
+        }
         
         if matches!(self.state, GameState::Menu) {
             self.save_check_timer += dt;
@@ -837,7 +844,7 @@ impl Game {
                     }
                 }
                 if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
-                    if self.settings_selection < 8 { 
+                    if self.settings_selection < 7 { 
                         self.settings_selection += 1;
                         self.audio.play_menu_select();
                     }
@@ -941,7 +948,7 @@ impl Game {
                             self.controls_player = 1;
                             self.controls_waiting_input = None;
                         }
-                        8 => {
+                        7 => {
                             self.audio.play_menu_select();
                             if self.came_from_pause {
                                 self.came_from_pause = false;
@@ -1874,18 +1881,29 @@ impl Game {
         }
     }
     fn draw_level_hud(&self, include_time_label: bool) {
+        let font_scale = self.font_size_scale;
         let time_seconds = self.time_remaining as u32;
         let time_text = if include_time_label {
             format!("Time: {}s", time_seconds)
         } else {
             format!("{}", time_seconds)
         };
-        let time_color = if self.time_remaining < TIME_WARNING_RED {
-            RED
-        } else if self.time_remaining < TIME_WARNING_YELLOW {
-            YELLOW
+        let time_color = if self.colorblind_mode {
+            if self.time_remaining < TIME_WARNING_RED {
+                DARKGRAY
+            } else if self.time_remaining < TIME_WARNING_YELLOW {
+                GRAY
+            } else {
+                BLACK
+            }
         } else {
-            BLACK
+            if self.time_remaining < TIME_WARNING_RED {
+                RED
+            } else if self.time_remaining < TIME_WARNING_YELLOW {
+                YELLOW
+            } else {
+                BLACK
+            }
         };
         let player_name_display = if self.player_name.is_empty() {
             "Player"
@@ -1896,7 +1914,7 @@ impl Game {
             player_name_display,
             10.0,
             30.0,
-            24.0,
+            24.0 * font_scale,
             BLACK,
         );
         draw_text(
@@ -1904,7 +1922,7 @@ impl Game {
                 self.current_level, self.coins_collected, self.total_coins, time_seconds),
             10.0,
             60.0,
-            30.0,
+            30.0 * font_scale,
             BLACK,
         );
         let score_text = format!("Score: {}", self.score);
@@ -1912,23 +1930,28 @@ impl Game {
             &score_text,
             10.0,
             100.0,
-            28.0,
+            28.0 * font_scale,
             BLACK,
         );
         let lives_text = format!("Lives: {}", self.lives);
+        let lives_color = if self.colorblind_mode {
+            if self.lives <= 1 { DARKGRAY } else { BLACK }
+        } else {
+            if self.lives <= 1 { RED } else { BLACK }
+        };
         draw_text(
             &lives_text,
             10.0,
             130.0,
-            28.0,
-            if self.lives <= 1 { RED } else { BLACK },
+            28.0 * font_scale,
+            lives_color,
         );
-        let time_width = measure_text(&time_text, None, 40u16, 1.0).width;
+        let time_width = measure_text(&time_text, None, (40.0 * font_scale) as u16, 1.0).width;
         draw_text(
             &time_text,
             screen_width() - time_width - 20.0,
             40.0,
-            40.0,
+            40.0 * font_scale,
             time_color,
         );
     }
@@ -2432,9 +2455,9 @@ impl Game {
                 }
                 draw_text(&assist_text, screen_width() / 2.0 - assist_width / 2.0, start_y + spacing * 6.0, option_size, assist_color);
                 let back_text = "BACK";
-                let back_color = if self.settings_selection == 8 { BLACK } else { GRAY };
+                let back_color = if self.settings_selection == 7 { BLACK } else { GRAY };
                 let back_width = measure_text(back_text, None, option_size as u16, 1.0).width;
-                if self.settings_selection == 8 {
+                if self.settings_selection == 7 {
                     draw_text(">", screen_width() / 2.0 - back_width / 2.0 - 30.0, start_y + spacing * 7.0, option_size, BLACK);
                 }
                 draw_text(back_text, screen_width() / 2.0 - back_width / 2.0, start_y + spacing * 7.0, option_size, back_color);
