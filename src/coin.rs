@@ -20,7 +20,6 @@ impl Coin {
 
     pub fn update(&mut self, dt: f32) {
         if !self.collected {
-            // Animação de rotação
             self.rotation += COIN_ROTATION_SPEED * dt;
         }
     }
@@ -55,11 +54,9 @@ impl Coin {
         let screen_x = self.x - camera_x;
         let screen_y = self.y - camera_y;
         
-        // Desenhar moeda em preto e branco (círculo)
         draw_circle(screen_x + 8.0, screen_y + 8.0, 8.0, WHITE);
         draw_circle_lines(screen_x + 8.0, screen_y + 8.0, 8.0, 2.0, BLACK);
         
-        // Linha central para efeito de rotação
         let center_x = screen_x + 8.0;
         let center_y = screen_y + 8.0;
         let end_x = center_x + 6.0 * self.rotation.cos();
@@ -73,7 +70,6 @@ pub fn create_level_coins(level: usize) -> Vec<Coin> {
     
     match level {
         1 => {
-            // Fase 1
             coins.push(Coin::new(250.0, 420.0));
             coins.push(Coin::new(450.0, 370.0));
             coins.push(Coin::new(650.0, 320.0));
@@ -87,7 +83,6 @@ pub fn create_level_coins(level: usize) -> Vec<Coin> {
             coins.push(Coin::new(2450.0, 320.0));
         }
         2 => {
-            // Fase 2
             coins.push(Coin::new(200.0, 470.0));
             coins.push(Coin::new(350.0, 420.0));
             coins.push(Coin::new(500.0, 370.0));
@@ -105,7 +100,6 @@ pub fn create_level_coins(level: usize) -> Vec<Coin> {
             coins.push(Coin::new(2600.0, 220.0));
         }
         3 => {
-            // Fase 3
             coins.push(Coin::new(150.0, 420.0));
             coins.push(Coin::new(450.0, 470.0));
             coins.push(Coin::new(700.0, 420.0));
@@ -124,7 +118,6 @@ pub fn create_level_coins(level: usize) -> Vec<Coin> {
             coins.push(Coin::new(1750.0, 220.0));
         }
         4 => {
-            // Fase 4
             coins.push(Coin::new(150.0, 470.0));
             coins.push(Coin::new(300.0, 420.0));
             coins.push(Coin::new(450.0, 470.0));
@@ -168,4 +161,3 @@ pub fn create_level_coins(level: usize) -> Vec<Coin> {
     
     coins
 }
-

@@ -1,7 +1,5 @@
 use macroquad::audio::{play_sound, Sound, load_sound_from_bytes, PlaySoundParams};
 
-/// Sistema de áudio simplificado usando sons sintéticos
-/// Gera sons programaticamente em formato WAV
 pub struct AudioManager {
     jump_sound: Option<Sound>,
     coin_sound: Option<Sound>,
@@ -10,15 +8,13 @@ pub struct AudioManager {
     level_complete_sound: Option<Sound>,
     menu_select_sound: Option<Sound>,
     footstep_sound: Option<Sound>,
-    // Sons especiais para easter egg
     jump_sound_special: Option<Sound>,
     footstep_sound_special: Option<Sound>,
     sounds_enabled: bool,
-    load_errors: Vec<String>, // Armazenar erros de carregamento
+    load_errors: Vec<String>,
 }
 
 impl AudioManager {
-    /// Cria um novo gerenciador de áudio
     pub fn new() -> Self {
         Self {
             jump_sound: None,
@@ -35,24 +31,20 @@ impl AudioManager {
         }
     }
     
-    /// Verifica se o áudio está habilitado
     pub fn is_enabled(&self) -> bool {
         self.sounds_enabled
     }
     
-    /// Alterna o estado do áudio (ligado/desligado)
     pub fn toggle(&mut self) -> bool {
         self.sounds_enabled = !self.sounds_enabled;
         self.sounds_enabled
     }
     
-    /// Retorna os erros de carregamento (se houver)
     #[allow(dead_code)]
     pub fn get_load_errors(&self) -> &[String] {
         &self.load_errors
     }
     
-    /// Verifica se todos os sons foram carregados com sucesso
     #[allow(dead_code)]
     pub fn all_sounds_loaded(&self) -> bool {
         self.jump_sound.is_some()
@@ -64,26 +56,23 @@ impl AudioManager {
             && self.footstep_sound.is_some()
     }
     
-    /// Carrega um som e retorna o resultado
     async fn load_sound_safe(bytes: &[u8], name: &str) -> Result<Sound, String> {
         load_sound_from_bytes(bytes)
             .await
             .map_err(|e| format!("Erro ao carregar som '{}': {:?}", name, e))
     }
     
-    // Gerar bytes de um som simples (beep)
     fn generate_beep_bytes(frequency: f32, duration: f32, sample_rate: u32) -> Vec<u8> {
         let num_samples = (sample_rate as f32 * duration) as usize;
-        let mut samples = Vec::with_capacity(num_samples * 2); // Mono 16-bit
+        let mut samples = Vec::with_capacity(num_samples * 2);
         
         for i in 0..num_samples {
             let t = i as f32 / sample_rate as f32;
-            // Onda senoidal com envelope para evitar clicks
             let envelope = if num_samples > 20 {
                 if i < num_samples / 10 {
-                    i as f32 / (num_samples / 10) as f32 // Fade in
+                    i as f32 / (num_samples / 10) as f32
                 } else if i > num_samples * 9 / 10 {
-                    (num_samples - i) as f32 / (num_samples / 10) as f32 // Fade out
+                    (num_samples - i) as f32 / (num_samples / 10) as f32
                 } else {
                     1.0
                 }
@@ -94,32 +83,27 @@ impl AudioManager {
             let sample = (t * frequency * 2.0 * std::f32::consts::PI).sin() * envelope * 0.5;
             let sample_i16 = (sample * 32767.0).clamp(-32768.0, 32767.0) as i16;
             
-            // 16-bit mono (little endian)
             samples.push((sample_i16 & 0xFF) as u8);
             samples.push((sample_i16 >> 8) as u8);
         }
         
-        // Criar cabeçalho WAV (formato correto)
         let mut wav = Vec::new();
         let data_size = samples.len() as u32;
         let file_size = 36 + data_size;
         
-        // RIFF header
         wav.extend_from_slice(b"RIFF");
         wav.extend_from_slice(&file_size.to_le_bytes());
         wav.extend_from_slice(b"WAVE");
         
-        // fmt chunk
         wav.extend_from_slice(b"fmt ");
-        wav.extend_from_slice(&16u32.to_le_bytes()); // chunk size
-        wav.extend_from_slice(&1u16.to_le_bytes()); // audio format (PCM)
-        wav.extend_from_slice(&1u16.to_le_bytes()); // num channels (mono)
-        wav.extend_from_slice(&sample_rate.to_le_bytes()); // sample rate
-        wav.extend_from_slice(&((sample_rate * 2) as u32).to_le_bytes()); // byte rate
-        wav.extend_from_slice(&2u16.to_le_bytes()); // block align
-        wav.extend_from_slice(&16u16.to_le_bytes()); // bits per sample
+        wav.extend_from_slice(&16u32.to_le_bytes());
+        wav.extend_from_slice(&1u16.to_le_bytes());
+        wav.extend_from_slice(&1u16.to_le_bytes());
+        wav.extend_from_slice(&sample_rate.to_le_bytes());
+        wav.extend_from_slice(&((sample_rate * 2) as u32).to_le_bytes());
+        wav.extend_from_slice(&2u16.to_le_bytes());
+        wav.extend_from_slice(&16u16.to_le_bytes());
         
-        // data chunk
         wav.extend_from_slice(b"data");
         wav.extend_from_slice(&data_size.to_le_bytes());
         wav.extend_from_slice(&samples);
@@ -127,26 +111,20 @@ impl AudioManager {
         wav
     }
     
-    /// Carrega todos os sons do jogo
     pub async fn load_sounds(&mut self) {
-        // Limpar erros anteriores
         self.load_errors.clear();
         
-        // Gerar sons sintéticos (aumentando duração e volume para teste)
         let jump_bytes = Self::generate_beep_bytes(440.0, 0.2, 44100);
         let coin_bytes = Self::generate_beep_bytes(880.0, 0.25, 44100);
         let death_bytes = Self::generate_beep_bytes(220.0, 0.6, 44100);
         let enemy_death_bytes = Self::generate_beep_bytes(330.0, 0.3, 44100);
         let level_complete_bytes = Self::generate_beep_bytes(523.25, 0.4, 44100);
         let menu_select_bytes = Self::generate_beep_bytes(600.0, 0.15, 44100);
-        // Som de passos: frequência mais baixa e curta para parecer um "tap"
         let footstep_bytes = Self::generate_beep_bytes(200.0, 0.08, 44100);
         
-        // Sons especiais para easter egg (frequências mais altas e diferentes)
-        let jump_special_bytes = Self::generate_beep_bytes(660.0, 0.15, 44100); // Mais agudo
-        let footstep_special_bytes = Self::generate_beep_bytes(350.0, 0.1, 44100); // Mais agudo e um pouco mais longo
+        let jump_special_bytes = Self::generate_beep_bytes(660.0, 0.15, 44100);
+        let footstep_special_bytes = Self::generate_beep_bytes(350.0, 0.1, 44100);
         
-        // Carregar sons usando o método helper
         match Self::load_sound_safe(&jump_bytes, "pulo").await {
             Ok(sound) => self.jump_sound = Some(sound),
             Err(e) => {
@@ -203,7 +181,6 @@ impl AudioManager {
             }
         }
         
-        // Carregar sons especiais
         match Self::load_sound_safe(&jump_special_bytes, "pulo especial").await {
             Ok(sound) => self.jump_sound_special = Some(sound),
             Err(e) => {
@@ -221,7 +198,6 @@ impl AudioManager {
         }
     }
     
-    /// Toca um som se disponível
     fn play_sound(sound: &Option<Sound>, volume: f32) {
         if let Some(s) = sound {
             play_sound(s, PlaySoundParams {
@@ -231,7 +207,6 @@ impl AudioManager {
         }
     }
     
-    /// Toca o som de pulo
     pub fn play_jump(&self, special: bool) {
         if self.sounds_enabled {
             if special {
@@ -242,53 +217,46 @@ impl AudioManager {
         }
     }
     
-    /// Toca o som de coleta de moeda
     pub fn play_coin(&self) {
         if self.sounds_enabled {
             Self::play_sound(&self.coin_sound, 0.8);
         }
     }
     
-    /// Toca o som de morte do jogador
     pub fn play_death(&self) {
         if self.sounds_enabled {
             Self::play_sound(&self.death_sound, 0.8);
         }
     }
     
-    /// Toca o som de morte de inimigo
     pub fn play_enemy_death(&self) {
         if self.sounds_enabled {
             Self::play_sound(&self.enemy_death_sound, 0.8);
         }
     }
     
-    /// Toca o som de fase completa
     pub fn play_level_complete(&self) {
         if self.sounds_enabled {
             Self::play_sound(&self.level_complete_sound, 0.8);
         }
     }
     
-    /// Toca o som de seleção no menu
     pub fn play_menu_select(&self) {
         if self.sounds_enabled {
             Self::play_sound(&self.menu_select_sound, 0.6);
         }
     }
     
-    /// Toca o som de passos (leve)
     pub fn play_footstep(&self, special: bool) {
         if self.sounds_enabled {
             if special {
                 Self::play_sound(&self.footstep_sound_special, 0.3);
             } else {
-                Self::play_sound(&self.footstep_sound, 0.3); // Volume baixo para ser sutil
+                Self::play_sound(&self.footstep_sound, 0.3);
             }
         }
     }
     
-    /// Define se o áudio está habilitado
     pub fn set_enabled(&mut self, enabled: bool) {
         self.sounds_enabled = enabled;
     }

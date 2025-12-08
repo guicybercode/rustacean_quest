@@ -18,7 +18,7 @@ fn window_conf() -> Conf {
         window_width: constants::SCREEN_WIDTH as i32,
         window_height: constants::SCREEN_HEIGHT as i32,
         window_resizable: false,
-        high_dpi: false, // Disable high DPI for better performance
+        high_dpi: false,
         ..Default::default()
     }
 }
@@ -36,4 +36,3 @@ async fn main() {
         next_frame().await;
     }
 }
-

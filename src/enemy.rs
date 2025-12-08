@@ -40,22 +40,17 @@ impl Enemy {
             return;
         }
         
-        
         self.x += self.vel_x * dt;
-        
         
         if !self.on_ground {
             self.vel_y += ENEMY_GRAVITY * dt; 
         }
         
-        
         if self.vel_y > TERMINAL_VELOCITY {
             self.vel_y = TERMINAL_VELOCITY;
         }
         
-        
         self.y += self.vel_y * dt;
-        
         
         self.on_ground = false;
 
@@ -80,24 +75,20 @@ impl Enemy {
             return;
         }
         
-        
         if self.x < platform.x + platform.width
             && self.x + self.width > platform.x
             && self.y < platform.y + platform.height
             && self.y + self.height > platform.y
         {
-            
             let overlap_top = (self.y + self.height) - platform.y;
             let overlap_left = (self.x + self.width) - platform.x;
             let overlap_right = (platform.x + platform.width) - self.x;
-            
             
             if overlap_top < overlap_left.min(overlap_right) && overlap_top < PLATFORM_COLLISION_THRESHOLD && self.vel_y >= 0.0 {
                 self.y = platform.y - self.height;
                 self.vel_y = 0.0; 
                 self.on_ground = true;
             } else {
-                
                 self.vel_x = -self.vel_x;
                 if self.vel_x > 0.0 {
                     self.x = platform.x + platform.width + 1.0;
@@ -108,13 +99,11 @@ impl Enemy {
         }
     }
     
-    
     #[inline]
     pub fn check_edge(&mut self, platforms: &[crate::platform::Platform]) {
         if !self.alive || !self.on_ground {
             return;
         }
-        
         
         let check_offset_x = if self.vel_x > 0.0 {
             self.width + 2.0
@@ -128,7 +117,6 @@ impl Enemy {
         let mut found_platform_below = false;
         
         for platform in platforms {
-            
             if check_x >= platform.x 
                 && check_x <= platform.x + platform.width
                 && check_y >= platform.y 
@@ -160,10 +148,6 @@ impl Enemy {
             self.on_ground = true;
         }
     }
-
-    
-    
-    
     
     pub fn check_player_collision(
         &mut self,
@@ -178,17 +162,11 @@ impl Enemy {
         }
         
         if self.check_collision(player_x, player_y, player_w, player_h) {
-            
             let player_bottom = player_y + player_h;
             let enemy_top = self.y;
             let enemy_center_y = self.y + self.height / 2.0;
             
-            
-            
-            
-            
             let is_on_top = player_vel_y >= -50.0 && player_bottom <= enemy_center_y + 10.0;
-            
             
             let is_falling_on_top = player_vel_y > 0.0 && player_bottom <= enemy_top + self.height * 0.7;
             
@@ -196,7 +174,6 @@ impl Enemy {
                 self.alive = false;
                 return Some(false); 
             }
-            
             
             return Some(true);
         }
@@ -250,7 +227,6 @@ pub fn create_level_enemies(level: usize, textures: Option<&[Rc<Texture2D>]>) ->
     
     match level {
         1 => {
-            
             enemies.push(Enemy::new(300.0, 420.0, texture_for(enemies.len())));
             enemies.push(Enemy::new(500.0, 370.0, texture_for(enemies.len())));
             enemies.push(Enemy::new(700.0, 320.0, texture_for(enemies.len())));
@@ -262,7 +238,6 @@ pub fn create_level_enemies(level: usize, textures: Option<&[Rc<Texture2D>]>) ->
             enemies.push(Enemy::new(2300.0, 370.0, texture_for(enemies.len())));
         }
         2 => {
-            
             enemies.push(Enemy::new(200.0, 470.0, texture_for(enemies.len())));
             enemies.push(Enemy::new(350.0, 420.0, texture_for(enemies.len())));
             enemies.push(Enemy::new(500.0, 370.0, texture_for(enemies.len())));
@@ -276,7 +251,6 @@ pub fn create_level_enemies(level: usize, textures: Option<&[Rc<Texture2D>]>) ->
             enemies.push(Enemy::new(1700.0, 470.0, texture_for(enemies.len())));
         }
         3 => {
-            
             enemies.push(Enemy::new(200.0, 420.0, texture_for(enemies.len())));
             enemies.push(Enemy::new(500.0, 470.0, texture_for(enemies.len())));
             enemies.push(Enemy::new(700.0, 420.0, texture_for(enemies.len())));
@@ -292,7 +266,6 @@ pub fn create_level_enemies(level: usize, textures: Option<&[Rc<Texture2D>]>) ->
             enemies.push(Enemy::new(600.0, 220.0, texture_for(enemies.len())));
         }
         4 => {
-            
             enemies.push(Enemy::new(150.0, 470.0, texture_for(enemies.len())));
             enemies.push(Enemy::new(300.0, 420.0, texture_for(enemies.len())));
             enemies.push(Enemy::new(450.0, 470.0, texture_for(enemies.len())));

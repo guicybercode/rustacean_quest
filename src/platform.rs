@@ -15,7 +15,6 @@ impl Platform {
 
     #[inline]
     pub fn check_collision(&self, other_x: f32, other_y: f32, other_w: f32, other_h: f32) -> bool {
-        // Verificação AABB direta (simples e rápida)
         other_x < self.x + self.width
             && other_x + other_w > self.x
             && other_y < self.y + self.height
@@ -34,27 +33,21 @@ impl Platform {
             return None;
         }
         
-        // Calcular sobreposição
         let overlap_left = (x + w) - self.x;
         let overlap_right = (self.x + self.width) - x;
         let overlap_top = (y + h) - self.y;
         let overlap_bottom = (self.y + self.height) - y;
         
-        // Encontrar a menor sobreposição para determinar a direção da colisão
         let min_overlap = overlap_left.min(overlap_right).min(overlap_top).min(overlap_bottom);
         
-        // Colisão por cima (piso) - agora detecta mesmo com vel_y = 0
-        // A condição vel_y >= 0 permite que jogadores parados no chão sejam detectados
         if min_overlap == overlap_top && vel_y >= 0.0 {
             return Some((x, self.y - h, true));
         }
         
-        // Colisão por baixo (teto) - só quando está subindo
         if min_overlap == overlap_bottom && vel_y < 0.0 {
             return Some((x, self.y + self.height, false));
         }
         
-        // Colisão lateral
         if min_overlap == overlap_left {
             return Some((self.x - w, y, false));
         }
@@ -62,7 +55,6 @@ impl Platform {
             return Some((self.x + self.width, y, false));
         }
         
-        // Fallback: colisão por cima (para quando está parado no chão)
         if overlap_top < overlap_bottom {
             Some((x, self.y - h, true))
         } else {
@@ -74,7 +66,6 @@ impl Platform {
         let screen_x = self.x - camera_x;
         let screen_y = self.y - camera_y;
         
-        // Desenhar plataforma em preto e branco
         draw_rectangle(screen_x, screen_y, self.width, self.height, WHITE);
         draw_rectangle_lines(screen_x, screen_y, self.width, self.height, 2.0, BLACK);
     }
@@ -85,7 +76,6 @@ pub fn create_level_platforms(level: usize) -> Vec<Platform> {
     
     match level {
         1 => {
-            // Fase 1 - Layout clássico
             platforms.push(Platform::new(0.0, 550.0, 4200.0, 50.0));
             platforms.push(Platform::new(200.0, 450.0, 150.0, 20.0));
             platforms.push(Platform::new(400.0, 400.0, 150.0, 20.0));
@@ -103,7 +93,6 @@ pub fn create_level_platforms(level: usize) -> Vec<Platform> {
             platforms.push(Platform::new(1900.0, 500.0, 40.0, 50.0));
         }
         2 => {
-            // Fase 2 - Mais vertical e desafiadora
             platforms.push(Platform::new(0.0, 550.0, 4200.0, 50.0));
             platforms.push(Platform::new(150.0, 500.0, 100.0, 20.0));
             platforms.push(Platform::new(300.0, 450.0, 100.0, 20.0));
@@ -122,7 +111,6 @@ pub fn create_level_platforms(level: usize) -> Vec<Platform> {
             platforms.push(Platform::new(2500.0, 250.0, 200.0, 20.0));
         }
         3 => {
-            // Fase 3 - Layout com mais espaços e desafios
             platforms.push(Platform::new(0.0, 550.0, 4200.0, 50.0));
             platforms.push(Platform::new(100.0, 450.0, 200.0, 20.0));
             platforms.push(Platform::new(400.0, 500.0, 150.0, 20.0));
@@ -135,7 +123,6 @@ pub fn create_level_platforms(level: usize) -> Vec<Platform> {
             platforms.push(Platform::new(2050.0, 450.0, 150.0, 20.0));
             platforms.push(Platform::new(2300.0, 500.0, 100.0, 20.0));
             platforms.push(Platform::new(2500.0, 450.0, 200.0, 20.0));
-            // Plataformas flutuantes
             platforms.push(Platform::new(300.0, 300.0, 80.0, 20.0));
             platforms.push(Platform::new(500.0, 250.0, 80.0, 20.0));
             platforms.push(Platform::new(700.0, 200.0, 80.0, 20.0));
@@ -143,36 +130,29 @@ pub fn create_level_platforms(level: usize) -> Vec<Platform> {
             platforms.push(Platform::new(1700.0, 250.0, 80.0, 20.0));
         }
         4 => {
-            // Fase 4 - Fase final mais desafiadora
             platforms.push(Platform::new(0.0, 550.0, 4200.0, 50.0));
-            // Plataformas em zigue-zague
             platforms.push(Platform::new(100.0, 500.0, 120.0, 20.0));
             platforms.push(Platform::new(250.0, 450.0, 120.0, 20.0));
             platforms.push(Platform::new(400.0, 500.0, 120.0, 20.0));
             platforms.push(Platform::new(550.0, 450.0, 120.0, 20.0));
             platforms.push(Platform::new(700.0, 500.0, 120.0, 20.0));
             platforms.push(Platform::new(850.0, 450.0, 120.0, 20.0));
-            // Plataformas altas
             platforms.push(Platform::new(1000.0, 350.0, 150.0, 20.0));
             platforms.push(Platform::new(1200.0, 300.0, 150.0, 20.0));
             platforms.push(Platform::new(1400.0, 250.0, 150.0, 20.0));
             platforms.push(Platform::new(1600.0, 200.0, 150.0, 20.0));
-            // Plataformas intermediárias
             platforms.push(Platform::new(1800.0, 400.0, 100.0, 20.0));
             platforms.push(Platform::new(1950.0, 350.0, 100.0, 20.0));
             platforms.push(Platform::new(2100.0, 300.0, 100.0, 20.0));
             platforms.push(Platform::new(2250.0, 250.0, 100.0, 20.0));
-            // Plataformas flutuantes pequenas
             platforms.push(Platform::new(2400.0, 400.0, 80.0, 20.0));
             platforms.push(Platform::new(2550.0, 350.0, 80.0, 20.0));
             platforms.push(Platform::new(2700.0, 300.0, 80.0, 20.0));
-            // Canos
             platforms.push(Platform::new(600.0, 500.0, 40.0, 50.0));
             platforms.push(Platform::new(1500.0, 500.0, 40.0, 50.0));
             platforms.push(Platform::new(2300.0, 500.0, 40.0, 50.0));
         }
         5 => {
-            // Fase 5 - Grande e mais difícil (preto e branco)
             platforms.push(Platform::new(0.0, 550.0, 4200.0, 50.0));
 
             platforms.push(Platform::new(180.0, 500.0, 120.0, 20.0));
@@ -208,11 +188,9 @@ pub fn create_level_platforms(level: usize) -> Vec<Platform> {
             platforms.push(Platform::new(3800.0, 500.0, 40.0, 50.0));
         }
         _ => {
-            // Fallback para fase 1
             platforms.push(Platform::new(0.0, 550.0, 4200.0, 50.0));
         }
     }
     
     platforms
 }
-
