@@ -1,5 +1,5 @@
-use macroquad::prelude::*;
 use crate::constants::*;
+use macroquad::prelude::*;
 use std::rc::Rc;
 
 pub struct Enemy {
@@ -8,7 +8,7 @@ pub struct Enemy {
     pub width: f32,
     pub height: f32,
     pub vel_x: f32,
-    pub vel_y: f32,  
+    pub vel_y: f32,
     pub alive: bool,
     pub on_ground: bool,
     pub facing_right: bool,
@@ -24,10 +24,10 @@ impl Enemy {
             y,
             width: ENEMY_WIDTH,
             height: ENEMY_HEIGHT,
-            vel_x: -ENEMY_SPEED, 
-            vel_y: 0.0,          
+            vel_x: -ENEMY_SPEED,
+            vel_y: 0.0,
             alive: true,
-            on_ground: true, 
+            on_ground: true,
             facing_right: false,
             texture,
             anim_frame: 0,
@@ -39,19 +39,19 @@ impl Enemy {
         if !self.alive {
             return;
         }
-        
+
         self.x += self.vel_x * dt;
-        
+
         if !self.on_ground {
-            self.vel_y += ENEMY_GRAVITY * dt; 
+            self.vel_y += ENEMY_GRAVITY * dt;
         }
-        
+
         if self.vel_y > TERMINAL_VELOCITY {
             self.vel_y = TERMINAL_VELOCITY;
         }
-        
+
         self.y += self.vel_y * dt;
-        
+
         self.on_ground = false;
 
         self.facing_right = self.vel_x >= 0.0;
@@ -73,7 +73,7 @@ impl Enemy {
         if !self.alive {
             return;
         }
-        
+
         if self.x < platform.x + platform.width
             && self.x + self.width > platform.x
             && self.y < platform.y + platform.height
@@ -82,50 +82,56 @@ impl Enemy {
             let overlap_top = (self.y + self.height) - platform.y;
             let overlap_left = (self.x + self.width) - platform.x;
             let overlap_right = (platform.x + platform.width) - self.x;
-            
-            if overlap_top < overlap_left.min(overlap_right) && overlap_top < PLATFORM_COLLISION_THRESHOLD && self.vel_y >= 0.0 {
+
+            if overlap_top < overlap_left.min(overlap_right)
+                && overlap_top < PLATFORM_COLLISION_THRESHOLD
+                && self.vel_y >= 0.0
+            {
                 self.y = platform.y - self.height;
-                self.vel_y = 0.0; 
+                self.vel_y = 0.0;
                 self.on_ground = true;
             } else {
                 self.vel_x = -self.vel_x;
                 if self.vel_x > 0.0 {
-                    self.x = platform.x + platform.width + crate::constants::ENEMY_COLLISION_PLATFORM_OFFSET;
+                    self.x = platform.x
+                        + platform.width
+                        + crate::constants::ENEMY_COLLISION_PLATFORM_OFFSET;
                 } else {
-                    self.x = platform.x - self.width - crate::constants::ENEMY_COLLISION_PLATFORM_OFFSET;
+                    self.x =
+                        platform.x - self.width - crate::constants::ENEMY_COLLISION_PLATFORM_OFFSET;
                 }
             }
         }
     }
-    
+
     #[inline]
     pub fn check_edge(&mut self, platforms: &[crate::platform::Platform]) {
         if !self.alive || !self.on_ground {
             return;
         }
-        
+
         let check_offset_x = if self.vel_x > 0.0 {
             self.width + crate::constants::ENEMY_EDGE_CHECK_OFFSET
         } else {
             -crate::constants::ENEMY_EDGE_CHECK_OFFSET
         };
-        
+
         let check_x = self.x + check_offset_x;
         let check_y = self.y + self.height + crate::constants::ENEMY_EDGE_CHECK_Y_OFFSET;
-        
+
         let mut found_platform_below = false;
-        
+
         for platform in platforms {
-            if check_x >= platform.x 
+            if check_x >= platform.x
                 && check_x <= platform.x + platform.width
-                && check_y >= platform.y 
+                && check_y >= platform.y
                 && check_y <= platform.y + platform.height
             {
                 found_platform_below = true;
                 break;
             }
         }
-        
+
         if !found_platform_below {
             self.vel_x = -self.vel_x;
             if self.vel_x > 0.0 {
@@ -140,14 +146,14 @@ impl Enemy {
         if !self.alive {
             return;
         }
-        
+
         if self.y + self.height >= ground_y {
             self.y = ground_y - self.height;
-            self.vel_y = 0.0; 
+            self.vel_y = 0.0;
             self.on_ground = true;
         }
     }
-    
+
     pub fn check_player_collision(
         &mut self,
         player_x: f32,
@@ -159,21 +165,25 @@ impl Enemy {
         if !self.alive {
             return None;
         }
-        
+
         if self.check_collision(player_x, player_y, player_w, player_h) {
             let player_bottom = player_y + player_h;
             let enemy_top = self.y;
             let enemy_center_y = self.y + self.height / 2.0;
-            
-            let is_on_top = player_vel_y >= crate::constants::PLAYER_COLLISION_VELOCITY_THRESHOLD && player_bottom <= enemy_center_y + crate::constants::PLAYER_ENEMY_TOP_COLLISION_THRESHOLD;
-            
-            let is_falling_on_top = player_vel_y > 0.0 && player_bottom <= enemy_top + self.height * crate::constants::PLAYER_ENEMY_FALLING_THRESHOLD;
-            
+
+            let is_on_top = player_vel_y >= crate::constants::PLAYER_COLLISION_VELOCITY_THRESHOLD
+                && player_bottom
+                    <= enemy_center_y + crate::constants::PLAYER_ENEMY_TOP_COLLISION_THRESHOLD;
+
+            let is_falling_on_top = player_vel_y > 0.0
+                && player_bottom
+                    <= enemy_top + self.height * crate::constants::PLAYER_ENEMY_FALLING_THRESHOLD;
+
             if is_on_top || is_falling_on_top {
                 self.alive = false;
-                return Some(false); 
+                return Some(false);
             }
-            
+
             return Some(true);
         }
         None
@@ -190,7 +200,7 @@ impl Enemy {
         if !self.alive {
             return;
         }
-        
+
         let screen_x = self.x - camera_x;
         let screen_y = self.y - camera_y;
 
@@ -223,7 +233,7 @@ pub fn create_level_enemies(level: usize, textures: Option<&[Rc<Texture2D>]>) ->
     let texture_for = |idx: usize| -> Option<Rc<Texture2D>> {
         textures.and_then(|t| t.get(idx % t.len()).cloned())
     };
-    
+
     match level {
         1 => {
             enemies.push(Enemy::new(300.0, 420.0, texture_for(enemies.len())));
@@ -303,6 +313,6 @@ pub fn create_level_enemies(level: usize, textures: Option<&[Rc<Texture2D>]>) ->
         }
         _ => {}
     }
-    
+
     enemies
 }

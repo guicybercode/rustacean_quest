@@ -1,19 +1,19 @@
-use macroquad::prelude::*;
-use crate::player::Player;
-use crate::enemy::{Enemy, create_level_enemies};
-use crate::platform::{Platform, create_level_platforms};
-use crate::coin::{Coin, create_level_coins};
-use crate::camera::Camera;
 use crate::audio::AudioManager;
-use crate::checkpoint::{Checkpoint, create_level_checkpoints};
-use crate::save::SaveData;
+use crate::camera::Camera;
+use crate::checkpoint::{create_level_checkpoints, Checkpoint};
+use crate::coin::{create_level_coins, Coin};
 use crate::constants::*;
+use crate::enemy::{create_level_enemies, Enemy};
 use crate::name_filter;
+use crate::platform::{create_level_platforms, Platform};
+use crate::player::Player;
+use crate::save::SaveData;
+use macroquad::prelude::*;
 
 pub enum GameState {
     Splash,
     Menu,
-    MenuExitConfirm, 
+    MenuExitConfirm,
     Credits,
     Settings,
     Controls,
@@ -21,14 +21,14 @@ pub enum GameState {
     Playing,
     GameOver,
     LevelComplete,
-    Versus, 
-    VersusEnd, 
+    Versus,
+    VersusEnd,
     Coop,
-    Respawn, 
-    ContinueMenu, 
-    NameInput, 
-    Tutorial, 
-    Pause, 
+    Respawn,
+    ContinueMenu,
+    NameInput,
+    Tutorial,
+    Pause,
 }
 #[derive(Clone, Copy, PartialEq)]
 pub enum ControlAction {
@@ -63,55 +63,55 @@ pub struct Game {
     state: GameState,
     coins_collected: u32,
     total_coins: u32,
-    menu_selection: usize, 
-    menu_animation_time: f32, 
-    level_selection: usize, 
-    current_level: usize, 
-    unlocked_levels: Vec<bool>, 
-    last_checkpoint_pos: Option<(f32, f32)>, 
-    time_remaining: f32, 
-    settings_selection: usize, 
+    menu_selection: usize,
+    menu_animation_time: f32,
+    level_selection: usize,
+    current_level: usize,
+    unlocked_levels: Vec<bool>,
+    last_checkpoint_pos: Option<(f32, f32)>,
+    time_remaining: f32,
+    settings_selection: usize,
     sound_enabled: bool,
     resolution_index: usize,
     available_resolutions: Vec<(u32, u32)>,
     #[allow(dead_code)]
-    fullscreen: bool, 
-    score: u32, 
-    lives: u32, 
-    respawn_timer: f32, 
-    game_over_fade_timer: f32, 
-    level_start_fade_timer: f32, 
-    footstep_timer: f32, 
-    player2: Option<Player>, 
-    player1_score: u32, 
-    player2_score: u32, 
-    player1_streak: u32, 
-    player2_streak: u32, 
-    player1_points: u32, 
-    player2_points: u32, 
-    versus_platforms: Vec<Platform>, 
-    respawn_timer_p1: f32, 
-    respawn_timer_p2: f32, 
-    versus_time_remaining: f32, 
-    player_name: String, 
-    continue_selection: usize, 
-    continue_mode: ContinueMode, 
-    name_input: String, 
-    name_input_error: Option<String>, 
-    tutorial_page: usize, 
-    tutorial_completed: bool, 
-    transition_timer: f32, 
-    transition_alpha: f32, 
-    transition_target_state: Option<GameState>, 
-    versus_played: bool, 
-    has_new_save: bool, 
-    last_save_timestamp: u64, 
-    save_check_timer: f32, 
-    level_info_cache: Vec<(String, usize, Color)>, 
-    pause_selection: usize, 
-    came_from_pause: bool, 
-    player_sprite_texture_p1: Option<std::rc::Rc<Texture2D>>, 
-    player_sprite_texture_p2: Option<std::rc::Rc<Texture2D>>, 
+    fullscreen: bool,
+    score: u32,
+    lives: u32,
+    respawn_timer: f32,
+    game_over_fade_timer: f32,
+    level_start_fade_timer: f32,
+    footstep_timer: f32,
+    player2: Option<Player>,
+    player1_score: u32,
+    player2_score: u32,
+    player1_streak: u32,
+    player2_streak: u32,
+    player1_points: u32,
+    player2_points: u32,
+    versus_platforms: Vec<Platform>,
+    respawn_timer_p1: f32,
+    respawn_timer_p2: f32,
+    versus_time_remaining: f32,
+    player_name: String,
+    continue_selection: usize,
+    continue_mode: ContinueMode,
+    name_input: String,
+    name_input_error: Option<String>,
+    tutorial_page: usize,
+    tutorial_completed: bool,
+    transition_timer: f32,
+    transition_alpha: f32,
+    transition_target_state: Option<GameState>,
+    versus_played: bool,
+    has_new_save: bool,
+    last_save_timestamp: u64,
+    save_check_timer: f32,
+    level_info_cache: Vec<(String, usize, Color)>,
+    pause_selection: usize,
+    came_from_pause: bool,
+    player_sprite_texture_p1: Option<std::rc::Rc<Texture2D>>,
+    player_sprite_texture_p2: Option<std::rc::Rc<Texture2D>>,
     enemy_textures: Vec<std::rc::Rc<Texture2D>>,
     splash_timer: f32,
     previous_menu_selection: usize,
@@ -136,7 +136,7 @@ pub struct Game {
 impl Game {
     pub async fn new() -> Self {
         let mut unlocked_levels = vec![false; MAX_LEVELS];
-        unlocked_levels[0] = true; 
+        unlocked_levels[0] = true;
         let mut audio = AudioManager::new();
         audio.load_sounds().await;
         let mut asset_load_errors = Vec::new();
@@ -182,7 +182,16 @@ impl Game {
             },
         };
         Self {
-            player: Player::new(50.0, 400.0, player_sprite_texture_p1.as_ref().map(|t| std::rc::Rc::clone(t)), player_sprite_texture_p2.as_ref().map(|t| std::rc::Rc::clone(t))),
+            player: Player::new(
+                50.0,
+                400.0,
+                player_sprite_texture_p1
+                    .as_ref()
+                    .map(|t| std::rc::Rc::clone(t)),
+                player_sprite_texture_p2
+                    .as_ref()
+                    .map(|t| std::rc::Rc::clone(t)),
+            ),
             enemies: Vec::with_capacity(ESTIMATED_ENEMIES_PER_LEVEL),
             platforms: Vec::with_capacity(ESTIMATED_PLATFORMS_PER_LEVEL),
             coins: Vec::with_capacity(ESTIMATED_COINS_PER_LEVEL),
@@ -203,12 +212,12 @@ impl Game {
             sound_enabled: true,
             resolution_index: 0,
             available_resolutions: Self::get_common_resolutions(),
-            fullscreen: false, 
+            fullscreen: false,
             score: 0,
-            lives: DEFAULT_LIVES, 
-            respawn_timer: 0.0, 
-            game_over_fade_timer: 0.0, 
-            level_start_fade_timer: LEVEL_START_FADE_TIMER, 
+            lives: DEFAULT_LIVES,
+            respawn_timer: 0.0,
+            game_over_fade_timer: 0.0,
+            level_start_fade_timer: LEVEL_START_FADE_TIMER,
             footstep_timer: 0.0,
             player2: None,
             player1_score: 0,
@@ -220,7 +229,7 @@ impl Game {
             versus_platforms: Vec::with_capacity(10),
             respawn_timer_p1: 0.0,
             respawn_timer_p2: 0.0,
-            versus_time_remaining: 600.0, 
+            versus_time_remaining: 600.0,
             player_name: String::new(),
             continue_selection: 0,
             continue_mode: ContinueMode::View,
@@ -296,7 +305,7 @@ impl Game {
             let (difficulty, color) = match level {
                 1 => ("EASY".to_string(), GREEN),
                 2 => ("MEDIUM".to_string(), YELLOW),
-                3 => ("HARD".to_string(), Color::new(1.0, 0.65, 0.0, 1.0)), 
+                3 => ("HARD".to_string(), Color::new(1.0, 0.65, 0.0, 1.0)),
                 4 => ("EXPERT".to_string(), RED),
                 5 => ("INSANE".to_string(), BLACK),
                 _ => ("UNKNOWN".to_string(), GRAY),
@@ -343,9 +352,17 @@ impl Game {
         self.lives = save_data.lives;
         self.score = save_data.score;
         let default_total = create_level_coins(self.current_level).len() as u32;
-        self.total_coins = if save_data.total_coins == 0 { default_total } else { save_data.total_coins };
+        self.total_coins = if save_data.total_coins == 0 {
+            default_total
+        } else {
+            save_data.total_coins
+        };
         self.coins_collected = save_data.coins_collected.min(self.total_coins);
-        self.time_remaining = if save_data.time_remaining > 0.0 { save_data.time_remaining } else { TIME_LIMIT };
+        self.time_remaining = if save_data.time_remaining > 0.0 {
+            save_data.time_remaining
+        } else {
+            TIME_LIMIT
+        };
         self.last_checkpoint_pos = save_data.last_checkpoint_pos;
         self.player_name = save_data.player_name;
         self.tutorial_completed = save_data.tutorial_completed;
@@ -391,15 +408,9 @@ impl Game {
     }
     fn is_control_pressed(&self, controls: &PlayerControls, action: ControlAction) -> bool {
         match action {
-            ControlAction::Left => {
-                controls.left.map(|k| is_key_down(k)).unwrap_or(false)
-            }
-            ControlAction::Right => {
-                controls.right.map(|k| is_key_down(k)).unwrap_or(false)
-            }
-            ControlAction::Jump => {
-                controls.jump.map(|k| is_key_down(k)).unwrap_or(false)
-            }
+            ControlAction::Left => controls.left.map(|k| is_key_down(k)).unwrap_or(false),
+            ControlAction::Right => controls.right.map(|k| is_key_down(k)).unwrap_or(false),
+            ControlAction::Jump => controls.jump.map(|k| is_key_down(k)).unwrap_or(false),
         }
     }
     fn update_transition(&mut self, dt: f32) {
@@ -423,8 +434,13 @@ impl Game {
     }
     fn draw_transition(&self) {
         if self.transition_timer > 0.0 && self.transition_alpha > 0.0 {
-            draw_rectangle(0.0, 0.0, screen_width(), screen_height(), 
-                Color::new(0.0, 0.0, 0.0, self.transition_alpha));
+            draw_rectangle(
+                0.0,
+                0.0,
+                screen_width(),
+                screen_height(),
+                Color::new(0.0, 0.0, 0.0, self.transition_alpha),
+            );
         }
     }
     fn check_for_new_saves(&mut self) {
@@ -449,11 +465,21 @@ impl Game {
             ("UNKNOWN".to_string(), 0, GRAY)
         }
     }
-    fn load_level(&mut self, level: usize, use_checkpoint: bool, restored_time: Option<f32>, restored_coins: Option<u32>) {
+    fn load_level(
+        &mut self,
+        level: usize,
+        use_checkpoint: bool,
+        restored_time: Option<f32>,
+        restored_coins: Option<u32>,
+    ) {
         let platforms = create_level_platforms(level);
         let coins = create_level_coins(level);
         let total_coins = coins.len() as u32;
-        let textures = if self.enemy_textures.is_empty() { None } else { Some(self.enemy_textures.as_slice()) };
+        let textures = if self.enemy_textures.is_empty() {
+            None
+        } else {
+            Some(self.enemy_textures.as_slice())
+        };
         let mut enemies = create_level_enemies(level, textures);
         let mut checkpoints = create_level_checkpoints(level);
         if use_checkpoint && self.last_checkpoint_pos.is_some() {
@@ -467,12 +493,12 @@ impl Game {
         }
         for enemy in &mut enemies {
             let enemy_center_x = enemy.x + enemy.width / 2.0;
-            let mut best_platform_y = GROUND_Y; 
+            let mut best_platform_y = GROUND_Y;
             let mut found_platform = false;
             for platform in &platforms {
-                if enemy_center_x >= platform.x 
+                if enemy_center_x >= platform.x
                     && enemy_center_x <= platform.x + platform.width
-                    && platform.y <= best_platform_y 
+                    && platform.y <= best_platform_y
                 {
                     best_platform_y = platform.y;
                     found_platform = true;
@@ -484,14 +510,24 @@ impl Game {
                 enemy.y = GROUND_Y - enemy.height;
             }
         }
-        let (player_start_x, player_start_y) = if let (true, Some((checkpoint_x, _))) = (use_checkpoint, self.last_checkpoint_pos) {
-            (checkpoint_x + 50.0, GROUND_Y - PLAYER_HEIGHT) 
-        } else {
-            (50.0, GROUND_Y - PLAYER_HEIGHT)
-        };
-        let mut player = Player::new(player_start_x, player_start_y, self.player_sprite_texture_p1.as_ref().map(|t| std::rc::Rc::clone(t)), self.player_sprite_texture_p2.as_ref().map(|t| std::rc::Rc::clone(t)));
+        let (player_start_x, player_start_y) =
+            if let (true, Some((checkpoint_x, _))) = (use_checkpoint, self.last_checkpoint_pos) {
+                (checkpoint_x + 50.0, GROUND_Y - PLAYER_HEIGHT)
+            } else {
+                (50.0, GROUND_Y - PLAYER_HEIGHT)
+            };
+        let mut player = Player::new(
+            player_start_x,
+            player_start_y,
+            self.player_sprite_texture_p1
+                .as_ref()
+                .map(|t| std::rc::Rc::clone(t)),
+            self.player_sprite_texture_p2
+                .as_ref()
+                .map(|t| std::rc::Rc::clone(t)),
+        );
         player.on_ground = true;
-        player.vel_y = 0.0; 
+        player.vel_y = 0.0;
         self.player = player;
         self.enemies = enemies;
         self.platforms = platforms;
@@ -525,15 +561,33 @@ impl Game {
         platforms.push(Platform::new(screen_w - 320.0, 350.0, 120.0, 20.0));
         platforms.push(Platform::new(150.0, 250.0, 100.0, 20.0));
         platforms.push(Platform::new(screen_w - 250.0, 250.0, 100.0, 20.0));
-        platforms.push(Platform::new(screen_w / 2.0 - 50.0, 400.0, 100.0, 20.0)); 
+        platforms.push(Platform::new(screen_w / 2.0 - 50.0, 400.0, 100.0, 20.0));
         platforms.push(Platform::new(50.0, 500.0, 40.0, 50.0));
         platforms.push(Platform::new(screen_w - 90.0, 500.0, 40.0, 50.0));
         self.versus_platforms = platforms;
-        self.player = Player::new(100.0, GROUND_Y - PLAYER_HEIGHT, self.player_sprite_texture_p1.as_ref().map(|t| std::rc::Rc::clone(t)), self.player_sprite_texture_p2.as_ref().map(|t| std::rc::Rc::clone(t)));
+        self.player = Player::new(
+            100.0,
+            GROUND_Y - PLAYER_HEIGHT,
+            self.player_sprite_texture_p1
+                .as_ref()
+                .map(|t| std::rc::Rc::clone(t)),
+            self.player_sprite_texture_p2
+                .as_ref()
+                .map(|t| std::rc::Rc::clone(t)),
+        );
         self.player.on_ground = true;
         self.player.vel_y = 0.0;
         self.player.y = GROUND_Y - PLAYER_HEIGHT;
-        self.player2 = Some(Player::new(screen_w - 100.0 - PLAYER_WIDTH, GROUND_Y - PLAYER_HEIGHT, self.player_sprite_texture_p1.as_ref().map(|t| std::rc::Rc::clone(t)), self.player_sprite_texture_p2.as_ref().map(|t| std::rc::Rc::clone(t))));
+        self.player2 = Some(Player::new(
+            screen_w - 100.0 - PLAYER_WIDTH,
+            GROUND_Y - PLAYER_HEIGHT,
+            self.player_sprite_texture_p1
+                .as_ref()
+                .map(|t| std::rc::Rc::clone(t)),
+            self.player_sprite_texture_p2
+                .as_ref()
+                .map(|t| std::rc::Rc::clone(t)),
+        ));
         if let Some(ref mut p2) = self.player2 {
             p2.on_ground = true;
             p2.vel_y = 0.0;
@@ -547,14 +601,20 @@ impl Game {
         self.player2_points = 0;
         self.respawn_timer_p1 = 0.0;
         self.respawn_timer_p2 = 0.0;
-        self.versus_time_remaining = 600.0; 
+        self.versus_time_remaining = 600.0;
         self.camera = Camera::new();
     }
     #[inline]
     fn is_nearby_for_collision(
-        x1: f32, y1: f32, w1: f32, h1: f32,
-        x2: f32, y2: f32, w2: f32, h2: f32,
-        margin: f32
+        x1: f32,
+        y1: f32,
+        w1: f32,
+        h1: f32,
+        x2: f32,
+        y2: f32,
+        w2: f32,
+        h2: f32,
+        margin: f32,
     ) -> bool {
         x2 + w2 >= x1 - margin
             && x2 <= x1 + w1 + margin
@@ -564,28 +624,37 @@ impl Game {
     fn check_player_platform_collisions(
         player: &mut Player,
         platforms: &[Platform],
-        player_rect: (f32, f32, f32, f32)
+        player_rect: (f32, f32, f32, f32),
     ) {
         let (px, py, pw, ph) = player_rect;
         for platform in platforms {
             if Self::is_nearby_for_collision(
-                px, py, pw, ph,
-                platform.x, platform.y, platform.width, platform.height,
-                COLLISION_MARGIN
+                px,
+                py,
+                pw,
+                ph,
+                platform.x,
+                platform.y,
+                platform.width,
+                platform.height,
+                COLLISION_MARGIN,
             ) {
                 player.check_platform_collision(platform);
             }
         }
     }
-    fn check_enemy_platform_collisions(
-        enemy: &mut Enemy,
-        platforms: &[Platform]
-    ) {
+    fn check_enemy_platform_collisions(enemy: &mut Enemy, platforms: &[Platform]) {
         for platform in platforms {
             if Self::is_nearby_for_collision(
-                enemy.x, enemy.y, enemy.width, enemy.height,
-                platform.x, platform.y, platform.width, platform.height,
-                COLLISION_MARGIN
+                enemy.x,
+                enemy.y,
+                enemy.width,
+                enemy.height,
+                platform.x,
+                platform.y,
+                platform.width,
+                platform.height,
+                COLLISION_MARGIN,
             ) {
                 enemy.check_platform_collision(platform);
             }
@@ -603,11 +672,11 @@ impl Game {
         player_x: f32,
         player_y: f32,
         player_w: f32,
-        platforms: &[Platform]
+        platforms: &[Platform],
     ) -> Option<f32> {
         let player_center_x = player_x + player_w / 2.0;
         for platform in platforms {
-            if player_center_x >= platform.x 
+            if player_center_x >= platform.x
                 && player_center_x <= platform.x + platform.width
                 && (player_y + PLAYER_HEIGHT - platform.y).abs() < 5.0
             {
@@ -644,7 +713,7 @@ impl Game {
     }
     pub fn update(&mut self, dt: f32) {
         self.update_transition(dt);
-        
+
         if self.error_timer > 0.0 {
             self.error_timer -= dt;
             if self.error_timer <= 0.0 {
@@ -658,7 +727,7 @@ impl Game {
             let excess = self.particles.len() - max_particles;
             self.particles.drain(0..excess);
         }
-        
+
         if matches!(self.state, GameState::Menu) {
             self.save_check_timer += dt;
             if self.save_check_timer >= SAVE_CHECK_INTERVAL {
@@ -668,11 +737,11 @@ impl Game {
         } else {
             self.save_check_timer = 0.0;
         }
-        
+
         if self.transition_target_state.is_some() && !matches!(self.state, GameState::Menu) {
             return;
         }
-        
+
         match self.state {
             GameState::Splash => {
                 self.splash_timer += dt;
@@ -681,7 +750,10 @@ impl Game {
                     self.splash_timer = 0.0;
                     self.splash_shown = true;
                 }
-                if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) || is_key_pressed(KeyCode::Escape) {
+                if is_key_pressed(KeyCode::Enter)
+                    || is_key_pressed(KeyCode::Space)
+                    || is_key_pressed(KeyCode::Escape)
+                {
                     self.state = GameState::Menu;
                     self.splash_timer = 0.0;
                     self.splash_shown = true;
@@ -692,14 +764,14 @@ impl Game {
                 if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
                     if self.menu_selection > 0 {
                         self.menu_selection -= 1;
-                        self.menu_animation_time = 0.0; 
+                        self.menu_animation_time = 0.0;
                         self.audio.play_menu_select();
                     }
                 }
                 if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
-                    if self.menu_selection < 6 { 
+                    if self.menu_selection < 6 {
                         self.menu_selection += 1;
-                        self.menu_animation_time = 0.0; 
+                        self.menu_animation_time = 0.0;
                         self.audio.play_menu_select();
                     }
                 }
@@ -710,7 +782,7 @@ impl Game {
                     self.audio.play_menu_select();
                     match self.menu_selection {
                         0 => {
-                            self.has_new_save = false; 
+                            self.has_new_save = false;
                             self.start_transition(GameState::ContinueMenu);
                             self.continue_selection = 0;
                             self.continue_mode = ContinueMode::View;
@@ -738,7 +810,7 @@ impl Game {
                         }
                         6 => {
                             self.state = GameState::MenuExitConfirm;
-                            self.menu_selection = 0; 
+                            self.menu_selection = 0;
                         }
                         _ => {}
                     }
@@ -811,7 +883,12 @@ impl Game {
                                 eprintln!("{}", error_msg);
                                 self.show_error(error_msg);
                             } else {
-                                self.load_level(self.current_level, self.last_checkpoint_pos.is_some(), Some(self.time_remaining), Some(self.coins_collected));
+                                self.load_level(
+                                    self.current_level,
+                                    self.last_checkpoint_pos.is_some(),
+                                    Some(self.time_remaining),
+                                    Some(self.coins_collected),
+                                );
                                 self.start_transition(GameState::Playing);
                             }
                         }
@@ -847,7 +924,7 @@ impl Game {
                     }
                 }
                 if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
-                    if self.settings_selection < 7 { 
+                    if self.settings_selection < 7 {
                         self.settings_selection += 1;
                         self.audio.play_menu_select();
                     }
@@ -979,15 +1056,49 @@ impl Game {
                 if let Some((player, action)) = self.controls_waiting_input {
                     let mut _captured = false;
                     let keys_to_check = [
-                        KeyCode::A, KeyCode::B, KeyCode::C, KeyCode::D, KeyCode::E, KeyCode::F,
-                        KeyCode::G, KeyCode::H, KeyCode::I, KeyCode::J, KeyCode::K, KeyCode::L,
-                        KeyCode::M, KeyCode::N, KeyCode::O, KeyCode::P, KeyCode::Q, KeyCode::R,
-                        KeyCode::S, KeyCode::T, KeyCode::U, KeyCode::V, KeyCode::W, KeyCode::X,
-                        KeyCode::Y, KeyCode::Z,
-                        KeyCode::Space, KeyCode::Enter, KeyCode::Escape,
-                        KeyCode::Left, KeyCode::Right, KeyCode::Up, KeyCode::Down,
-                        KeyCode::Key0, KeyCode::Key1, KeyCode::Key2, KeyCode::Key3, KeyCode::Key4,
-                        KeyCode::Key5, KeyCode::Key6, KeyCode::Key7, KeyCode::Key8, KeyCode::Key9,
+                        KeyCode::A,
+                        KeyCode::B,
+                        KeyCode::C,
+                        KeyCode::D,
+                        KeyCode::E,
+                        KeyCode::F,
+                        KeyCode::G,
+                        KeyCode::H,
+                        KeyCode::I,
+                        KeyCode::J,
+                        KeyCode::K,
+                        KeyCode::L,
+                        KeyCode::M,
+                        KeyCode::N,
+                        KeyCode::O,
+                        KeyCode::P,
+                        KeyCode::Q,
+                        KeyCode::R,
+                        KeyCode::S,
+                        KeyCode::T,
+                        KeyCode::U,
+                        KeyCode::V,
+                        KeyCode::W,
+                        KeyCode::X,
+                        KeyCode::Y,
+                        KeyCode::Z,
+                        KeyCode::Space,
+                        KeyCode::Enter,
+                        KeyCode::Escape,
+                        KeyCode::Left,
+                        KeyCode::Right,
+                        KeyCode::Up,
+                        KeyCode::Down,
+                        KeyCode::Key0,
+                        KeyCode::Key1,
+                        KeyCode::Key2,
+                        KeyCode::Key3,
+                        KeyCode::Key4,
+                        KeyCode::Key5,
+                        KeyCode::Key6,
+                        KeyCode::Key7,
+                        KeyCode::Key8,
+                        KeyCode::Key9,
                     ];
                     for &keycode in &keys_to_check {
                         if is_key_pressed(keycode) {
@@ -1056,7 +1167,10 @@ impl Game {
                 }
             }
             GameState::Credits => {
-                if is_key_pressed(KeyCode::Escape) || is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
+                if is_key_pressed(KeyCode::Escape)
+                    || is_key_pressed(KeyCode::Enter)
+                    || is_key_pressed(KeyCode::Space)
+                {
                     if self.came_from_pause {
                         self.came_from_pause = false;
                         self.state = GameState::Pause;
@@ -1111,8 +1225,8 @@ impl Game {
                     }
                 }
                 if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
-                    if self.level_selection < self.unlocked_levels.len() 
-                        && self.unlocked_levels[self.level_selection] 
+                    if self.level_selection < self.unlocked_levels.len()
+                        && self.unlocked_levels[self.level_selection]
                     {
                         if self.level_selection == 0 && !self.tutorial_completed {
                             self.start_transition(GameState::Tutorial);
@@ -1123,7 +1237,16 @@ impl Game {
                             if matches!(self.state, GameState::LevelSelect) {
                                 let coming_from_coop = self.menu_selection == 2;
                                 if coming_from_coop {
-                                    self.player2 = Some(Player::new(150.0, GROUND_Y - PLAYER_HEIGHT, self.player_sprite_texture_p1.as_ref().map(|t| std::rc::Rc::clone(t)), self.player_sprite_texture_p2.as_ref().map(|t| std::rc::Rc::clone(t))));
+                                    self.player2 = Some(Player::new(
+                                        150.0,
+                                        GROUND_Y - PLAYER_HEIGHT,
+                                        self.player_sprite_texture_p1
+                                            .as_ref()
+                                            .map(|t| std::rc::Rc::clone(t)),
+                                        self.player_sprite_texture_p2
+                                            .as_ref()
+                                            .map(|t| std::rc::Rc::clone(t)),
+                                    ));
                                     if let Some(ref mut p2) = self.player2 {
                                         p2.on_ground = true;
                                         p2.vel_y = 0.0;
@@ -1144,12 +1267,16 @@ impl Game {
                 }
             }
             GameState::Playing => {
-                let effective_dt = if self.assist_mode { dt * ASSIST_MODE_SLOW_MOTION } else { dt };
+                let effective_dt = if self.assist_mode {
+                    dt * ASSIST_MODE_SLOW_MOTION
+                } else {
+                    dt
+                };
                 if is_key_pressed(KeyCode::P) {
                     self.state = GameState::Pause;
                     self.pause_selection = 0;
-                    self.came_from_pause = false; 
-                    return; 
+                    self.came_from_pause = false;
+                    return;
                 }
                 if is_key_pressed(KeyCode::Escape) {
                     self.transition_to_menu();
@@ -1164,21 +1291,26 @@ impl Game {
                     self.time_remaining = 0.0;
                     self.audio.play_death();
                     self.state = GameState::GameOver;
-                    return; 
+                    return;
                 }
                 let p1_left = self.is_control_pressed(&self.player1_controls, ControlAction::Left);
-                let p1_right = self.is_control_pressed(&self.player1_controls, ControlAction::Right);
-                    self.player.handle_movement_custom(p1_left, p1_right);
-                    self.player.update(effective_dt);
-                    let (px, py, pw, ph) = self.player.get_rect();
+                let p1_right =
+                    self.is_control_pressed(&self.player1_controls, ControlAction::Right);
+                self.player.handle_movement_custom(p1_left, p1_right);
+                self.player.update(effective_dt);
+                let (px, py, pw, ph) = self.player.get_rect();
                 for checkpoint in &mut self.checkpoints {
                     if checkpoint.check_activation(px, py, pw, ph) {
                         self.last_checkpoint_pos = Some((checkpoint.x, checkpoint.y));
-                        self.score += SCORE_CHECKPOINT; 
-                        self.audio.play_coin(); 
+                        self.score += SCORE_CHECKPOINT;
+                        self.audio.play_coin();
                     }
                 }
-                Self::check_player_platform_collisions(&mut self.player, &self.platforms, (px, py, pw, ph));
+                Self::check_player_platform_collisions(
+                    &mut self.player,
+                    &self.platforms,
+                    (px, py, pw, ph),
+                );
                 let p1_jump = self.is_control_pressed(&self.player1_controls, ControlAction::Jump);
                 let jumped = self.player.handle_jump_custom(p1_jump);
                 if jumped {
@@ -1186,10 +1318,10 @@ impl Game {
                 }
                 self.player.update_animation(dt);
                 if self.player.on_ground && self.player.vel_x.abs() > MIN_VELOCITY_FOR_FOOTSTEP {
-                        self.footstep_timer += effective_dt;
+                    self.footstep_timer += effective_dt;
                     if self.footstep_timer >= FOOTSTEP_INTERVAL {
                         self.audio.play_footstep(self.is_easter_egg());
-                        self.footstep_timer = 0.0; 
+                        self.footstep_timer = 0.0;
                     }
                 } else {
                     self.footstep_timer = 0.0;
@@ -1210,16 +1342,16 @@ impl Game {
                         self.lives -= 1;
                     }
                     if self.lives == 0 {
-                        self.game_over_fade_timer = GAME_OVER_FADE_TIMER; 
+                        self.game_over_fade_timer = GAME_OVER_FADE_TIMER;
                         self.state = GameState::GameOver;
                     } else {
-                        self.respawn_timer = RESPAWN_TIMER; 
+                        self.respawn_timer = RESPAWN_TIMER;
                         self.state = GameState::Respawn;
                     }
                 }
                 for enemy in &mut self.enemies {
                     if !enemy.alive {
-                        continue; 
+                        continue;
                     }
                     enemy.update(effective_dt);
                     Self::check_enemy_platform_collisions(enemy, &self.platforms);
@@ -1234,45 +1366,52 @@ impl Game {
                                 self.lives -= 1;
                             }
                             if self.lives == 0 {
-                                self.game_over_fade_timer = GAME_OVER_FADE_TIMER; 
+                                self.game_over_fade_timer = GAME_OVER_FADE_TIMER;
                                 self.state = GameState::GameOver;
                             } else {
-                                self.respawn_timer = RESPAWN_TIMER; 
+                                self.respawn_timer = RESPAWN_TIMER;
                                 self.state = GameState::Respawn;
                             }
-                            break; 
+                            break;
                         }
                         Some(false) => {
                             self.audio.play_enemy_death();
-                            self.score += SCORE_ENEMY; 
-                            self.player.vel_y = JUMP_FORCE * JUMP_BOUNCE_MULTIPLIER; 
+                            self.score += SCORE_ENEMY;
+                            self.player.vel_y = JUMP_FORCE * JUMP_BOUNCE_MULTIPLIER;
                         }
-                        None => {
-                        }
+                        None => {}
                     }
                 }
                 for coin in &mut self.coins {
                     if coin.collected {
-                        continue; 
+                        continue;
                     }
                     coin.update(effective_dt);
                     if coin.check_collection(px, py, pw, ph) {
                         self.coins_collected += 1;
-                        self.score += SCORE_COIN; 
+                        self.score += SCORE_COIN;
                         self.audio.play_coin();
                         for _ in 0..PARTICLE_COUNT / 2 {
                             let angle = rand::gen_range(0.0, std::f32::consts::PI * 2.0);
                             let speed = rand::gen_range(30.0, 80.0);
-                            self.particles.push((coin.x + COIN_SIZE / 2.0, coin.y + COIN_SIZE / 2.0, angle.cos() * speed, angle.sin() * speed, PARTICLE_LIFETIME));
+                            self.particles.push((
+                                coin.x + COIN_SIZE / 2.0,
+                                coin.y + COIN_SIZE / 2.0,
+                                angle.cos() * speed,
+                                angle.sin() * speed,
+                                PARTICLE_LIFETIME,
+                            ));
                         }
                     }
                 }
                 if self.player.x > LEVEL_COMPLETE_X || self.coins_collected >= self.total_coins {
                     let time_bonus = (self.time_remaining * SCORE_TIME_BONUS) as u32;
-                    self.score += SCORE_LEVEL_COMPLETE + time_bonus; 
+                    self.score += SCORE_LEVEL_COMPLETE + time_bonus;
                     self.audio.play_level_complete();
-                    if self.current_level < MAX_LEVELS && self.current_level < self.unlocked_levels.len() {
-                        self.unlocked_levels[self.current_level] = true; 
+                    if self.current_level < MAX_LEVELS
+                        && self.current_level < self.unlocked_levels.len()
+                    {
+                        self.unlocked_levels[self.current_level] = true;
                     }
                     if let Err(e) = self.save_game(0) {
                         let error_msg = format!("Erro ao salvar jogo: {}", e);
@@ -1316,18 +1455,31 @@ impl Game {
                     self.player2 = None;
                     return;
                 }
-                let effective_dt = if self.assist_mode { dt * ASSIST_MODE_SLOW_MOTION } else { dt };
+                let effective_dt = if self.assist_mode {
+                    dt * ASSIST_MODE_SLOW_MOTION
+                } else {
+                    dt
+                };
                 self.versus_time_remaining -= effective_dt;
                 if self.versus_time_remaining <= 0.0 {
                     self.versus_time_remaining = 0.0;
-                    self.audio.play_level_complete(); 
+                    self.audio.play_level_complete();
                     self.state = GameState::VersusEnd;
                     return;
                 }
                 if self.respawn_timer_p1 > 0.0 {
                     self.respawn_timer_p1 -= dt;
                     if self.respawn_timer_p1 <= 0.0 {
-                        self.player = Player::new(100.0, GROUND_Y - PLAYER_HEIGHT, self.player_sprite_texture_p1.as_ref().map(|t| std::rc::Rc::clone(t)), self.player_sprite_texture_p2.as_ref().map(|t| std::rc::Rc::clone(t)));
+                        self.player = Player::new(
+                            100.0,
+                            GROUND_Y - PLAYER_HEIGHT,
+                            self.player_sprite_texture_p1
+                                .as_ref()
+                                .map(|t| std::rc::Rc::clone(t)),
+                            self.player_sprite_texture_p2
+                                .as_ref()
+                                .map(|t| std::rc::Rc::clone(t)),
+                        );
                         self.player.on_ground = true;
                         self.player.vel_y = 0.0;
                         self.player.y = GROUND_Y - PLAYER_HEIGHT;
@@ -1337,7 +1489,16 @@ impl Game {
                     self.respawn_timer_p2 -= dt;
                     if let Some(ref mut p2) = self.player2 {
                         if self.respawn_timer_p2 <= 0.0 {
-                            *p2 = Player::new(700.0, GROUND_Y - PLAYER_HEIGHT, self.player_sprite_texture_p1.as_ref().map(|t| std::rc::Rc::clone(t)), self.player_sprite_texture_p2.as_ref().map(|t| std::rc::Rc::clone(t)));
+                            *p2 = Player::new(
+                                700.0,
+                                GROUND_Y - PLAYER_HEIGHT,
+                                self.player_sprite_texture_p1
+                                    .as_ref()
+                                    .map(|t| std::rc::Rc::clone(t)),
+                                self.player_sprite_texture_p2
+                                    .as_ref()
+                                    .map(|t| std::rc::Rc::clone(t)),
+                            );
                             p2.on_ground = true;
                             p2.vel_y = 0.0;
                             p2.y = GROUND_Y - PLAYER_HEIGHT;
@@ -1345,9 +1506,12 @@ impl Game {
                     }
                 }
                 if self.respawn_timer_p1 <= 0.0 {
-                    let p1_left = self.is_control_pressed(&self.player1_controls, ControlAction::Left);
-                    let p1_right = self.is_control_pressed(&self.player1_controls, ControlAction::Right);
-                    let p1_jump = self.is_control_pressed(&self.player1_controls, ControlAction::Jump);
+                    let p1_left =
+                        self.is_control_pressed(&self.player1_controls, ControlAction::Left);
+                    let p1_right =
+                        self.is_control_pressed(&self.player1_controls, ControlAction::Right);
+                    let p1_jump =
+                        self.is_control_pressed(&self.player1_controls, ControlAction::Jump);
                     let use_easter_egg = self.is_easter_egg();
                     let jumped = Self::update_versus_player_physics(
                         &mut self.player,
@@ -1360,7 +1524,8 @@ impl Game {
                     if jumped {
                         self.audio.play_jump(use_easter_egg);
                     }
-                    if self.player.on_ground && self.player.vel_x.abs() > MIN_VELOCITY_FOR_FOOTSTEP {
+                    if self.player.on_ground && self.player.vel_x.abs() > MIN_VELOCITY_FOR_FOOTSTEP
+                    {
                         self.footstep_timer += effective_dt;
                         if self.footstep_timer >= FOOTSTEP_INTERVAL {
                             self.audio.play_footstep(use_easter_egg);
@@ -1390,13 +1555,21 @@ impl Game {
                     } else {
                         p2.update(effective_dt);
                         let (px2, py2, pw2, ph2) = p2.get_rect();
-                        Self::check_player_platform_collisions(p2, &self.versus_platforms, (px2, py2, pw2, ph2));
+                        Self::check_player_platform_collisions(
+                            p2,
+                            &self.versus_platforms,
+                            (px2, py2, pw2, ph2),
+                        );
                     }
                 }
                 if self.respawn_timer_p1 > 0.0 {
                     self.player.update(effective_dt);
                     let (px, py, pw, ph) = self.player.get_rect();
-                    Self::check_player_platform_collisions(&mut self.player, &self.versus_platforms, (px, py, pw, ph));
+                    Self::check_player_platform_collisions(
+                        &mut self.player,
+                        &self.versus_platforms,
+                        (px, py, pw, ph),
+                    );
                 }
                 if self.respawn_timer_p1 <= 0.0 && self.respawn_timer_p2 <= 0.0 {
                     if let Some(ref mut p2) = self.player2 {
@@ -1406,18 +1579,17 @@ impl Game {
                             self.player2_streak = 0;
                             let points = Self::calculate_versus_points(self.player1_streak);
                             self.player1_points += points;
-                            self.audio.play_enemy_death(); 
-                            self.respawn_timer_p2 = 2.0; 
+                            self.audio.play_enemy_death();
+                            self.respawn_timer_p2 = 2.0;
                             self.player.vel_y = JUMP_FORCE * JUMP_BOUNCE_MULTIPLIER;
-                        }
-                        else if p2.check_stomp(&self.player, p2.vel_y) {
+                        } else if p2.check_stomp(&self.player, p2.vel_y) {
                             self.player2_score += 1;
                             self.player2_streak += 1;
                             self.player1_streak = 0;
                             let points = Self::calculate_versus_points(self.player2_streak);
                             self.player2_points += points;
-                            self.audio.play_enemy_death(); 
-                            self.respawn_timer_p1 = 2.0; 
+                            self.audio.play_enemy_death();
+                            self.respawn_timer_p1 = 2.0;
                             p2.vel_y = JUMP_FORCE * 0.6;
                         }
                     }
@@ -1447,20 +1619,20 @@ impl Game {
                 if self.player.y > FALL_DEATH_Y && self.respawn_timer_p1 <= 0.0 {
                     self.player2_score += 1;
                     self.player2_streak += 1;
-                    self.player1_streak = 0; 
+                    self.player1_streak = 0;
                     let points = Self::calculate_versus_points(self.player2_streak);
                     self.player2_points += points;
-                    self.audio.play_enemy_death(); 
+                    self.audio.play_enemy_death();
                     self.respawn_timer_p1 = 2.0;
                 }
                 if let Some(ref p2) = self.player2 {
                     if p2.y > FALL_DEATH_Y && self.respawn_timer_p2 <= 0.0 {
                         self.player1_score += 1;
                         self.player1_streak += 1;
-                        self.player2_streak = 0; 
+                        self.player2_streak = 0;
                         let points = Self::calculate_versus_points(self.player1_streak);
                         self.player1_points += points;
-                        self.audio.play_enemy_death(); 
+                        self.audio.play_enemy_death();
                         self.respawn_timer_p2 = 2.0;
                     }
                 }
@@ -1477,14 +1649,21 @@ impl Game {
                 }
             }
             GameState::VersusEnd => {
-                if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) || is_key_pressed(KeyCode::Escape) {
+                if is_key_pressed(KeyCode::Enter)
+                    || is_key_pressed(KeyCode::Space)
+                    || is_key_pressed(KeyCode::Escape)
+                {
                     self.state = GameState::Menu;
                     self.menu_selection = 0;
                     self.player2 = None;
                 }
             }
             GameState::Coop => {
-                let effective_dt = if self.assist_mode { dt * ASSIST_MODE_SLOW_MOTION } else { dt };
+                let effective_dt = if self.assist_mode {
+                    dt * ASSIST_MODE_SLOW_MOTION
+                } else {
+                    dt
+                };
                 if is_key_pressed(KeyCode::P) {
                     self.state = GameState::Pause;
                     self.pause_selection = 0;
@@ -1511,9 +1690,27 @@ impl Game {
                     self.respawn_timer_p1 -= dt;
                     if self.respawn_timer_p1 <= 0.0 {
                         if let Some(checkpoint) = self.last_checkpoint_pos {
-                            self.player = Player::new(checkpoint.0, checkpoint.1 - PLAYER_HEIGHT, self.player_sprite_texture_p1.as_ref().map(|t| std::rc::Rc::clone(t)), self.player_sprite_texture_p2.as_ref().map(|t| std::rc::Rc::clone(t)));
+                            self.player = Player::new(
+                                checkpoint.0,
+                                checkpoint.1 - PLAYER_HEIGHT,
+                                self.player_sprite_texture_p1
+                                    .as_ref()
+                                    .map(|t| std::rc::Rc::clone(t)),
+                                self.player_sprite_texture_p2
+                                    .as_ref()
+                                    .map(|t| std::rc::Rc::clone(t)),
+                            );
                         } else {
-                            self.player = Player::new(50.0, GROUND_Y - PLAYER_HEIGHT, self.player_sprite_texture_p1.as_ref().map(|t| std::rc::Rc::clone(t)), self.player_sprite_texture_p2.as_ref().map(|t| std::rc::Rc::clone(t)));
+                            self.player = Player::new(
+                                50.0,
+                                GROUND_Y - PLAYER_HEIGHT,
+                                self.player_sprite_texture_p1
+                                    .as_ref()
+                                    .map(|t| std::rc::Rc::clone(t)),
+                                self.player_sprite_texture_p2
+                                    .as_ref()
+                                    .map(|t| std::rc::Rc::clone(t)),
+                            );
                         }
                         self.player.on_ground = true;
                         self.player.vel_y = 0.0;
@@ -1524,9 +1721,27 @@ impl Game {
                     if let Some(ref mut p2) = self.player2 {
                         if self.respawn_timer_p2 <= 0.0 {
                             if let Some(checkpoint) = self.last_checkpoint_pos {
-                                *p2 = Player::new(checkpoint.0 + 100.0, checkpoint.1 - PLAYER_HEIGHT, self.player_sprite_texture_p1.as_ref().map(|t| std::rc::Rc::clone(t)), self.player_sprite_texture_p2.as_ref().map(|t| std::rc::Rc::clone(t)));
+                                *p2 = Player::new(
+                                    checkpoint.0 + 100.0,
+                                    checkpoint.1 - PLAYER_HEIGHT,
+                                    self.player_sprite_texture_p1
+                                        .as_ref()
+                                        .map(|t| std::rc::Rc::clone(t)),
+                                    self.player_sprite_texture_p2
+                                        .as_ref()
+                                        .map(|t| std::rc::Rc::clone(t)),
+                                );
                             } else {
-                                *p2 = Player::new(150.0, GROUND_Y - PLAYER_HEIGHT, self.player_sprite_texture_p1.as_ref().map(|t| std::rc::Rc::clone(t)), self.player_sprite_texture_p2.as_ref().map(|t| std::rc::Rc::clone(t)));
+                                *p2 = Player::new(
+                                    150.0,
+                                    GROUND_Y - PLAYER_HEIGHT,
+                                    self.player_sprite_texture_p1
+                                        .as_ref()
+                                        .map(|t| std::rc::Rc::clone(t)),
+                                    self.player_sprite_texture_p2
+                                        .as_ref()
+                                        .map(|t| std::rc::Rc::clone(t)),
+                                );
                             }
                             p2.on_ground = true;
                             p2.vel_y = 0.0;
@@ -1534,8 +1749,10 @@ impl Game {
                     }
                 }
                 if self.respawn_timer_p1 <= 0.0 {
-                    let p1_left = self.is_control_pressed(&self.player1_controls, ControlAction::Left);
-                    let p1_right = self.is_control_pressed(&self.player1_controls, ControlAction::Right);
+                    let p1_left =
+                        self.is_control_pressed(&self.player1_controls, ControlAction::Left);
+                    let p1_right =
+                        self.is_control_pressed(&self.player1_controls, ControlAction::Right);
                     self.player.handle_movement_custom(p1_left, p1_right);
                     self.player.update(effective_dt);
                     let (px, py, pw, ph) = self.player.get_rect();
@@ -1546,14 +1763,20 @@ impl Game {
                             self.audio.play_coin();
                         }
                     }
-                    Self::check_player_platform_collisions(&mut self.player, &self.platforms, (px, py, pw, ph));
-                    let p1_jump = self.is_control_pressed(&self.player1_controls, ControlAction::Jump);
+                    Self::check_player_platform_collisions(
+                        &mut self.player,
+                        &self.platforms,
+                        (px, py, pw, ph),
+                    );
+                    let p1_jump =
+                        self.is_control_pressed(&self.player1_controls, ControlAction::Jump);
                     let jumped = self.player.handle_jump_custom(p1_jump);
                     if jumped {
                         self.audio.play_jump(self.is_easter_egg());
                     }
                     self.player.update_animation(dt);
-                    if self.player.on_ground && self.player.vel_x.abs() > MIN_VELOCITY_FOR_FOOTSTEP {
+                    if self.player.on_ground && self.player.vel_x.abs() > MIN_VELOCITY_FOR_FOOTSTEP
+                    {
                         self.footstep_timer += effective_dt;
                         if self.footstep_timer >= FOOTSTEP_INTERVAL {
                             self.audio.play_footstep(self.is_easter_egg());
@@ -1579,7 +1802,11 @@ impl Game {
                                 self.audio.play_coin();
                             }
                         }
-                        Self::check_player_platform_collisions(p2, &self.platforms, (px2, py2, pw2, ph2));
+                        Self::check_player_platform_collisions(
+                            p2,
+                            &self.platforms,
+                            (px2, py2, pw2, ph2),
+                        );
                         let jumped = p2.handle_jump_custom(p2_jump);
                         if jumped {
                             self.audio.play_jump(false);
@@ -1588,13 +1815,21 @@ impl Game {
                     } else {
                         p2.update(effective_dt);
                         let (px2, py2, pw2, ph2) = p2.get_rect();
-                        Self::check_player_platform_collisions(p2, &self.platforms, (px2, py2, pw2, ph2));
+                        Self::check_player_platform_collisions(
+                            p2,
+                            &self.platforms,
+                            (px2, py2, pw2, ph2),
+                        );
                     }
                 }
                 if self.respawn_timer_p1 > 0.0 {
                     self.player.update(effective_dt);
                     let (px, py, pw, ph) = self.player.get_rect();
-                    Self::check_player_platform_collisions(&mut self.player, &self.platforms, (px, py, pw, ph));
+                    Self::check_player_platform_collisions(
+                        &mut self.player,
+                        &self.platforms,
+                        (px, py, pw, ph),
+                    );
                 }
                 let player_left = self.player.x;
                 let player_right = self.player.x + self.player.width;
@@ -1723,12 +1958,22 @@ impl Game {
                         }
                     }
                 }
-                if (self.player.x > LEVEL_COMPLETE_X || self.coins_collected >= self.total_coins) && 
-                   (self.player2.is_none() || self.player2.as_ref().map(|p| p.x > LEVEL_COMPLETE_X || self.coins_collected >= self.total_coins).unwrap_or(true)) {
+                if (self.player.x > LEVEL_COMPLETE_X || self.coins_collected >= self.total_coins)
+                    && (self.player2.is_none()
+                        || self
+                            .player2
+                            .as_ref()
+                            .map(|p| {
+                                p.x > LEVEL_COMPLETE_X || self.coins_collected >= self.total_coins
+                            })
+                            .unwrap_or(true))
+                {
                     let time_bonus = (self.time_remaining * SCORE_TIME_BONUS) as u32;
                     self.score += SCORE_LEVEL_COMPLETE + time_bonus;
                     self.audio.play_level_complete();
-                    if self.current_level < MAX_LEVELS && self.current_level < self.unlocked_levels.len() {
+                    if self.current_level < MAX_LEVELS
+                        && self.current_level < self.unlocked_levels.len()
+                    {
                         self.unlocked_levels[self.current_level] = true;
                     }
                     if let Err(e) = self.save_game(0) {
@@ -1803,7 +2048,12 @@ impl Game {
                 self.respawn_timer -= dt;
                 if self.respawn_timer <= 0.0 {
                     self.respawn_timer = 0.0;
-                    self.load_level(self.current_level, self.last_checkpoint_pos.is_some(), Some(self.time_remaining), Some(self.coins_collected));
+                    self.load_level(
+                        self.current_level,
+                        self.last_checkpoint_pos.is_some(),
+                        Some(self.time_remaining),
+                        Some(self.coins_collected),
+                    );
                     self.state = GameState::Playing;
                 }
             }
@@ -1814,7 +2064,12 @@ impl Game {
                 if self.game_over_fade_timer <= 0.0 {
                     if is_key_pressed(KeyCode::Space) || is_key_pressed(KeyCode::Enter) {
                         self.lives = DEFAULT_LIVES;
-                        self.load_level(self.current_level, self.last_checkpoint_pos.is_some(), None, None);
+                        self.load_level(
+                            self.current_level,
+                            self.last_checkpoint_pos.is_some(),
+                            None,
+                            None,
+                        );
                         self.state = GameState::Playing;
                     }
                     if is_key_pressed(KeyCode::Escape) {
@@ -1913,42 +2168,34 @@ impl Game {
         } else {
             &self.player_name
         };
+        draw_text(player_name_display, 10.0, 30.0, 24.0 * font_scale, BLACK);
         draw_text(
-            player_name_display,
-            10.0,
-            30.0,
-            24.0 * font_scale,
-            BLACK,
-        );
-        draw_text(
-            &format!("Level: {} | Coins: {}/{} | Time: {}s",
-                self.current_level, self.coins_collected, self.total_coins, time_seconds),
+            &format!(
+                "Level: {} | Coins: {}/{} | Time: {}s",
+                self.current_level, self.coins_collected, self.total_coins, time_seconds
+            ),
             10.0,
             60.0,
             30.0 * font_scale,
             BLACK,
         );
         let score_text = format!("Score: {}", self.score);
-        draw_text(
-            &score_text,
-            10.0,
-            100.0,
-            28.0 * font_scale,
-            BLACK,
-        );
+        draw_text(&score_text, 10.0, 100.0, 28.0 * font_scale, BLACK);
         let lives_text = format!("Lives: {}", self.lives);
         let lives_color = if self.colorblind_mode {
-            if self.lives <= 1 { DARKGRAY } else { BLACK }
+            if self.lives <= 1 {
+                DARKGRAY
+            } else {
+                BLACK
+            }
         } else {
-            if self.lives <= 1 { RED } else { BLACK }
+            if self.lives <= 1 {
+                RED
+            } else {
+                BLACK
+            }
         };
-        draw_text(
-            &lives_text,
-            10.0,
-            130.0,
-            28.0 * font_scale,
-            lives_color,
-        );
+        draw_text(&lives_text, 10.0, 130.0, 28.0 * font_scale, lives_color);
         let time_width = measure_text(&time_text, None, (40.0 * font_scale) as u16, 1.0).width;
         draw_text(
             &time_text,
@@ -1983,7 +2230,8 @@ impl Game {
                 );
                 let version_text = format!("v{}", GAME_VERSION);
                 let version_size = MENU_VERSION_SIZE;
-                let version_width = measure_text(&version_text, None, version_size as u16, 1.0).width;
+                let version_width =
+                    measure_text(&version_text, None, version_size as u16, 1.0).width;
                 let version_color = Color::new(0.5, 0.5, 0.5, fade_in * 0.7);
                 draw_text(
                     &version_text,
@@ -2010,10 +2258,13 @@ impl Game {
                     MENU_TITLE_SIZE,
                     title_color,
                 );
-                let menu_options = vec!["CONTINUE", "PLAY", "CO-OP", "VERSUS", "SETTINGS", "CREDITS", "EXIT"];
+                let menu_options = vec![
+                    "CONTINUE", "PLAY", "CO-OP", "VERSUS", "SETTINGS", "CREDITS", "EXIT",
+                ];
                 let start_y = screen_height() / 2.0 - 40.0;
                 for (i, option) in menu_options.iter().enumerate() {
-                    let option_width = measure_text(option, None, MENU_OPTION_SIZE as u16, 1.0).width;
+                    let option_width =
+                        measure_text(option, None, MENU_OPTION_SIZE as u16, 1.0).width;
                     let x = screen_width() / 2.0 - option_width / 2.0;
                     let y = start_y + (i as f32 * MENU_OPTION_SPACING);
                     let color = if i == self.menu_selection {
@@ -2039,7 +2290,13 @@ impl Game {
                         let anim_time = self.menu_animation_time % (2.0 * std::f32::consts::PI);
                         let alpha = (anim_time.sin() * 0.4 + 0.6).clamp(0.3, 1.0);
                         let indicator_color = Color::new(0.0, 0.0, 0.0, alpha);
-                        draw_text(">", x - MENU_INDICATOR_OFFSET, y, MENU_OPTION_SIZE, indicator_color);
+                        draw_text(
+                            ">",
+                            x - MENU_INDICATOR_OFFSET,
+                            y,
+                            MENU_OPTION_SIZE,
+                            indicator_color,
+                        );
                         draw_line(
                             x - 10.0,
                             y + 8.0,
@@ -2059,11 +2316,13 @@ impl Game {
                         draw_text(new_text, x + option_width + 10.0, y, 20.0, GREEN);
                     }
                 }
-                let last_option_y = start_y + ((menu_options.len() - 1) as f32 * MENU_OPTION_SPACING);
+                let last_option_y =
+                    start_y + ((menu_options.len() - 1) as f32 * MENU_OPTION_SPACING);
                 let last_option_height = MENU_OPTION_SIZE;
-                let instructions_y = last_option_y + last_option_height + 40.0; 
+                let instructions_y = last_option_y + last_option_height + 40.0;
                 let instructions = "ARROWS/WASD: Navigate | ENTER/SPACE: Select";
-                let inst_width = measure_text(instructions, None, MENU_INSTRUCTION_SIZE as u16, 1.0).width;
+                let inst_width =
+                    measure_text(instructions, None, MENU_INSTRUCTION_SIZE as u16, 1.0).width;
                 draw_text(
                     instructions,
                     screen_width() / 2.0 - inst_width / 2.0,
@@ -2160,7 +2419,8 @@ impl Game {
                     );
                 }
                 let instructions = "ENTER: Confirm | ESC: Cancel";
-                let inst_width = measure_text(instructions, None, MENU_INSTRUCTION_SIZE as u16, 1.0).width;
+                let inst_width =
+                    measure_text(instructions, None, MENU_INSTRUCTION_SIZE as u16, 1.0).width;
                 draw_text(
                     instructions,
                     screen_width() / 2.0 - inst_width / 2.0,
@@ -2225,7 +2485,7 @@ impl Game {
                 for (i, line) in content.iter().enumerate() {
                     let line_width = measure_text(line, None, 28, 1.0).width;
                     let color = if i == 0 && !line.is_empty() {
-                        BLACK 
+                        BLACK
                     } else {
                         DARKGRAY
                     };
@@ -2247,7 +2507,8 @@ impl Game {
                     GRAY,
                 );
                 let instructions = "LEFT/RIGHT: Navigate | ENTER: Next/Start | ESC: Skip";
-                let inst_width = measure_text(instructions, None, MENU_INSTRUCTION_SIZE as u16, 1.0).width;
+                let inst_width =
+                    measure_text(instructions, None, MENU_INSTRUCTION_SIZE as u16, 1.0).width;
                 draw_text(
                     instructions,
                     screen_width() / 2.0 - inst_width / 2.0,
@@ -2293,7 +2554,11 @@ impl Game {
                             save_data.lives,
                             minutes,
                             seconds,
-                            if save_data.player_name.is_empty() { "Unknown" } else { &save_data.player_name }
+                            if save_data.player_name.is_empty() {
+                                "Unknown"
+                            } else {
+                                &save_data.player_name
+                            }
                         );
                         draw_text(&slot_info, 150.0, y, 24.0, color);
                     } else {
@@ -2313,7 +2578,8 @@ impl Game {
                     );
                 } else {
                     let instructions = "ENTER: Load | DELETE: Erase | ESC: Back";
-                    let inst_width = measure_text(instructions, None, MENU_INSTRUCTION_SIZE as u16, 1.0).width;
+                    let inst_width =
+                        measure_text(instructions, None, MENU_INSTRUCTION_SIZE as u16, 1.0).width;
                     draw_text(
                         instructions,
                         screen_width() / 2.0 - inst_width / 2.0,
@@ -2326,7 +2592,8 @@ impl Game {
             GameState::MenuExitConfirm => {
                 let confirm_text = "ARE YOU SURE YOU WANT TO EXIT?";
                 let confirm_size = 42.0;
-                let confirm_width = measure_text(confirm_text, None, confirm_size as u16, 1.0).width;
+                let confirm_width =
+                    measure_text(confirm_text, None, confirm_size as u16, 1.0).width;
                 draw_text(
                     confirm_text,
                     screen_width() / 2.0 - confirm_width / 2.0,
@@ -2368,36 +2635,100 @@ impl Game {
                 let option_size = 30.0;
                 let start_y = 180.0;
                 let spacing = 60.0;
-                let safe_resolution_index = self.resolution_index.min(self.available_resolutions.len().saturating_sub(1));
+                let safe_resolution_index = self
+                    .resolution_index
+                    .min(self.available_resolutions.len().saturating_sub(1));
                 let res_name = if safe_resolution_index < self.available_resolutions.len() {
                     let (w, h) = self.available_resolutions[safe_resolution_index];
                     format!("{}x{}", w, h)
                 } else {
                     "Unknown".to_string()
                 };
-                let sound_text = format!("SOUND: {}", if self.sound_enabled { "ON" } else { "OFF" });
-                let sound_color = if self.settings_selection == 0 { BLACK } else { GRAY };
+                let sound_text =
+                    format!("SOUND: {}", if self.sound_enabled { "ON" } else { "OFF" });
+                let sound_color = if self.settings_selection == 0 {
+                    BLACK
+                } else {
+                    GRAY
+                };
                 let sound_width = measure_text(&sound_text, None, option_size as u16, 1.0).width;
                 if self.settings_selection == 0 {
-                    draw_text(">", screen_width() / 2.0 - sound_width / 2.0 - 30.0, start_y, option_size, BLACK);
-                    draw_text("<", screen_width() / 2.0 + sound_width / 2.0 + 10.0, start_y, option_size, BLACK);
+                    draw_text(
+                        ">",
+                        screen_width() / 2.0 - sound_width / 2.0 - 30.0,
+                        start_y,
+                        option_size,
+                        BLACK,
+                    );
+                    draw_text(
+                        "<",
+                        screen_width() / 2.0 + sound_width / 2.0 + 10.0,
+                        start_y,
+                        option_size,
+                        BLACK,
+                    );
                 }
-                draw_text(&sound_text, screen_width() / 2.0 - sound_width / 2.0, start_y, option_size, sound_color);
+                draw_text(
+                    &sound_text,
+                    screen_width() / 2.0 - sound_width / 2.0,
+                    start_y,
+                    option_size,
+                    sound_color,
+                );
                 let res_text = format!("RESOLUTION: {}", res_name);
-                let res_color = if self.settings_selection == 1 { BLACK } else { GRAY };
+                let res_color = if self.settings_selection == 1 {
+                    BLACK
+                } else {
+                    GRAY
+                };
                 let res_width = measure_text(&res_text, None, option_size as u16, 1.0).width;
                 if self.settings_selection == 1 {
-                    draw_text("<", screen_width() / 2.0 - res_width / 2.0 - 30.0, start_y + spacing, option_size, BLACK);
-                    draw_text(">", screen_width() / 2.0 + res_width / 2.0 + 10.0, start_y + spacing, option_size, BLACK);
+                    draw_text(
+                        "<",
+                        screen_width() / 2.0 - res_width / 2.0 - 30.0,
+                        start_y + spacing,
+                        option_size,
+                        BLACK,
+                    );
+                    draw_text(
+                        ">",
+                        screen_width() / 2.0 + res_width / 2.0 + 10.0,
+                        start_y + spacing,
+                        option_size,
+                        BLACK,
+                    );
                 }
-                draw_text(&res_text, screen_width() / 2.0 - res_width / 2.0, start_y + spacing, option_size, res_color);
+                draw_text(
+                    &res_text,
+                    screen_width() / 2.0 - res_width / 2.0,
+                    start_y + spacing,
+                    option_size,
+                    res_color,
+                );
                 let controls_text = "CONTROLS";
-                let controls_color = if self.settings_selection == 2 { BLACK } else { GRAY };
-                let controls_width = measure_text(controls_text, None, option_size as u16, 1.0).width;
+                let controls_color = if self.settings_selection == 2 {
+                    BLACK
+                } else {
+                    GRAY
+                };
+                let controls_width =
+                    measure_text(controls_text, None, option_size as u16, 1.0).width;
                 if self.settings_selection == 2 {
-                    draw_text(">", screen_width() / 2.0 - controls_width / 2.0 - 30.0, start_y + spacing * 2.0, option_size, BLACK);
+                    draw_text(
+                        ">",
+                        screen_width() / 2.0 - controls_width / 2.0 - 30.0,
+                        start_y + spacing * 2.0,
+                        option_size,
+                        BLACK,
+                    );
                 }
-                draw_text(controls_text, screen_width() / 2.0 - controls_width / 2.0, start_y + spacing * 2.0, option_size, controls_color);
+                draw_text(
+                    controls_text,
+                    screen_width() / 2.0 - controls_width / 2.0,
+                    start_y + spacing * 2.0,
+                    option_size,
+                    controls_color,
+                );
                 if self.settings_selection == 2 {
                     let controls_info = [
                         "ARROWS / WASD - Move",
@@ -2426,45 +2757,158 @@ impl Game {
                     _ => "NORMAL",
                 };
                 let difficulty_text = format!("DIFFICULTY: {}", difficulty_name);
-                let difficulty_color = if self.settings_selection == 3 { BLACK } else { GRAY };
-                let difficulty_width = measure_text(&difficulty_text, None, option_size as u16, 1.0).width;
+                let difficulty_color = if self.settings_selection == 3 {
+                    BLACK
+                } else {
+                    GRAY
+                };
+                let difficulty_width =
+                    measure_text(&difficulty_text, None, option_size as u16, 1.0).width;
                 if self.settings_selection == 3 {
-                    draw_text("<", screen_width() / 2.0 - difficulty_width / 2.0 - 30.0, start_y + spacing * 3.0, option_size, BLACK);
-                    draw_text(">", screen_width() / 2.0 + difficulty_width / 2.0 + 10.0, start_y + spacing * 3.0, option_size, BLACK);
+                    draw_text(
+                        "<",
+                        screen_width() / 2.0 - difficulty_width / 2.0 - 30.0,
+                        start_y + spacing * 3.0,
+                        option_size,
+                        BLACK,
+                    );
+                    draw_text(
+                        ">",
+                        screen_width() / 2.0 + difficulty_width / 2.0 + 10.0,
+                        start_y + spacing * 3.0,
+                        option_size,
+                        BLACK,
+                    );
                 }
-                draw_text(&difficulty_text, screen_width() / 2.0 - difficulty_width / 2.0, start_y + spacing * 3.0, option_size, difficulty_color);
-                let colorblind_text = format!("COLORBLIND MODE: {}", if self.colorblind_mode { "ON" } else { "OFF" });
-                let colorblind_color = if self.settings_selection == 4 { BLACK } else { GRAY };
-                let colorblind_width = measure_text(&colorblind_text, None, option_size as u16, 1.0).width;
+                draw_text(
+                    &difficulty_text,
+                    screen_width() / 2.0 - difficulty_width / 2.0,
+                    start_y + spacing * 3.0,
+                    option_size,
+                    difficulty_color,
+                );
+                let colorblind_text = format!(
+                    "COLORBLIND MODE: {}",
+                    if self.colorblind_mode { "ON" } else { "OFF" }
+                );
+                let colorblind_color = if self.settings_selection == 4 {
+                    BLACK
+                } else {
+                    GRAY
+                };
+                let colorblind_width =
+                    measure_text(&colorblind_text, None, option_size as u16, 1.0).width;
                 if self.settings_selection == 4 {
-                    draw_text(">", screen_width() / 2.0 - colorblind_width / 2.0 - 30.0, start_y + spacing * 4.0, option_size, BLACK);
-                    draw_text("<", screen_width() / 2.0 + colorblind_width / 2.0 + 10.0, start_y + spacing * 4.0, option_size, BLACK);
+                    draw_text(
+                        ">",
+                        screen_width() / 2.0 - colorblind_width / 2.0 - 30.0,
+                        start_y + spacing * 4.0,
+                        option_size,
+                        BLACK,
+                    );
+                    draw_text(
+                        "<",
+                        screen_width() / 2.0 + colorblind_width / 2.0 + 10.0,
+                        start_y + spacing * 4.0,
+                        option_size,
+                        BLACK,
+                    );
                 }
-                draw_text(&colorblind_text, screen_width() / 2.0 - colorblind_width / 2.0, start_y + spacing * 4.0, option_size, colorblind_color);
+                draw_text(
+                    &colorblind_text,
+                    screen_width() / 2.0 - colorblind_width / 2.0,
+                    start_y + spacing * 4.0,
+                    option_size,
+                    colorblind_color,
+                );
                 let font_text = format!("FONT SIZE: {:.0}%", self.font_size_scale * 100.0);
-                let font_color = if self.settings_selection == 5 { BLACK } else { GRAY };
+                let font_color = if self.settings_selection == 5 {
+                    BLACK
+                } else {
+                    GRAY
+                };
                 let font_width = measure_text(&font_text, None, option_size as u16, 1.0).width;
                 if self.settings_selection == 5 {
-                    draw_text("<", screen_width() / 2.0 - font_width / 2.0 - 30.0, start_y + spacing * 5.0, option_size, BLACK);
-                    draw_text(">", screen_width() / 2.0 + font_width / 2.0 + 10.0, start_y + spacing * 5.0, option_size, BLACK);
+                    draw_text(
+                        "<",
+                        screen_width() / 2.0 - font_width / 2.0 - 30.0,
+                        start_y + spacing * 5.0,
+                        option_size,
+                        BLACK,
+                    );
+                    draw_text(
+                        ">",
+                        screen_width() / 2.0 + font_width / 2.0 + 10.0,
+                        start_y + spacing * 5.0,
+                        option_size,
+                        BLACK,
+                    );
                 }
-                draw_text(&font_text, screen_width() / 2.0 - font_width / 2.0, start_y + spacing * 5.0, option_size, font_color);
-                let assist_text = format!("ASSIST MODE: {}", if self.assist_mode { "ON" } else { "OFF" });
-                let assist_color = if self.settings_selection == 6 { BLACK } else { GRAY };
+                draw_text(
+                    &font_text,
+                    screen_width() / 2.0 - font_width / 2.0,
+                    start_y + spacing * 5.0,
+                    option_size,
+                    font_color,
+                );
+                let assist_text = format!(
+                    "ASSIST MODE: {}",
+                    if self.assist_mode { "ON" } else { "OFF" }
+                );
+                let assist_color = if self.settings_selection == 6 {
+                    BLACK
+                } else {
+                    GRAY
+                };
                 let assist_width = measure_text(&assist_text, None, option_size as u16, 1.0).width;
                 if self.settings_selection == 6 {
-                    draw_text(">", screen_width() / 2.0 - assist_width / 2.0 - 30.0, start_y + spacing * 6.0, option_size, BLACK);
-                    draw_text("<", screen_width() / 2.0 + assist_width / 2.0 + 10.0, start_y + spacing * 6.0, option_size, BLACK);
+                    draw_text(
+                        ">",
+                        screen_width() / 2.0 - assist_width / 2.0 - 30.0,
+                        start_y + spacing * 6.0,
+                        option_size,
+                        BLACK,
+                    );
+                    draw_text(
+                        "<",
+                        screen_width() / 2.0 + assist_width / 2.0 + 10.0,
+                        start_y + spacing * 6.0,
+                        option_size,
+                        BLACK,
+                    );
                 }
-                draw_text(&assist_text, screen_width() / 2.0 - assist_width / 2.0, start_y + spacing * 6.0, option_size, assist_color);
+                draw_text(
+                    &assist_text,
+                    screen_width() / 2.0 - assist_width / 2.0,
+                    start_y + spacing * 6.0,
+                    option_size,
+                    assist_color,
+                );
                 let back_text = "BACK";
-                let back_color = if self.settings_selection == 7 { BLACK } else { GRAY };
+                let back_color = if self.settings_selection == 7 {
+                    BLACK
+                } else {
+                    GRAY
+                };
                 let back_width = measure_text(back_text, None, option_size as u16, 1.0).width;
                 if self.settings_selection == 7 {
-                    draw_text(">", screen_width() / 2.0 - back_width / 2.0 - 30.0, start_y + spacing * 7.0, option_size, BLACK);
+                    draw_text(
+                        ">",
+                        screen_width() / 2.0 - back_width / 2.0 - 30.0,
+                        start_y + spacing * 7.0,
+                        option_size,
+                        BLACK,
+                    );
                 }
-                draw_text(back_text, screen_width() / 2.0 - back_width / 2.0, start_y + spacing * 7.0, option_size, back_color);
-                let instructions = "Use ARROWS to navigate and adjust, ENTER to confirm, ESC to go back";
+                draw_text(
+                    back_text,
+                    screen_width() / 2.0 - back_width / 2.0,
+                    start_y + spacing * 7.0,
+                    option_size,
+                    back_color,
+                );
+                let instructions =
+                    "Use ARROWS to navigate and adjust, ENTER to confirm, ESC to go back";
                 let inst_size = 16.0;
                 let inst_width = measure_text(instructions, None, inst_size as u16, 1.0).width;
                 draw_text(
@@ -2487,13 +2931,15 @@ impl Game {
                     BLACK,
                 );
                 if let Some((player, action)) = self.controls_waiting_input {
-                    let waiting_text = format!("Press key for Player {} {}...", 
-                        player, 
+                    let waiting_text = format!(
+                        "Press key for Player {} {}...",
+                        player,
                         match action {
                             ControlAction::Left => "LEFT",
                             ControlAction::Right => "RIGHT",
                             ControlAction::Jump => "JUMP",
-                        });
+                        }
+                    );
                     let waiting_width = measure_text(&waiting_text, None, 32, 1.0).width;
                     draw_text(
                         &waiting_text,
@@ -2537,9 +2983,17 @@ impl Game {
                     ];
                     for (i, (action_name, key, gamepad)) in actions.iter().enumerate() {
                         let y = start_y + 80.0 + (i as f32 * spacing);
-                        let color = if i == self.controls_selection { BLACK } else { GRAY };
-                        let key_name = key.map(|k| format!("{:?}", k)).unwrap_or_else(|| "None".to_string());
-                        let gamepad_text = gamepad.map(|g| format!("GP{}", g)).unwrap_or_else(|| "".to_string());
+                        let color = if i == self.controls_selection {
+                            BLACK
+                        } else {
+                            GRAY
+                        };
+                        let key_name = key
+                            .map(|k| format!("{:?}", k))
+                            .unwrap_or_else(|| "None".to_string());
+                        let gamepad_text = gamepad
+                            .map(|g| format!("GP{}", g))
+                            .unwrap_or_else(|| "".to_string());
                         let binding_text = if !gamepad_text.is_empty() {
                             format!("{}: {} / {}", action_name, key_name, gamepad_text)
                         } else {
@@ -2548,7 +3002,8 @@ impl Game {
                         if i == self.controls_selection {
                             draw_text(">", screen_width() / 2.0 - 200.0, y, option_size, BLACK);
                         }
-                        let binding_width = measure_text(&binding_text, None, option_size as u16, 1.0).width;
+                        let binding_width =
+                            measure_text(&binding_text, None, option_size as u16, 1.0).width;
                         draw_text(
                             &binding_text,
                             screen_width() / 2.0 - binding_width / 2.0,
@@ -2585,7 +3040,8 @@ impl Game {
                 let mut current_y = start_y;
                 let game_title = "JUMP QUEST";
                 let game_title_size = 36.0;
-                let game_title_width = measure_text(game_title, None, game_title_size as u16, 1.0).width;
+                let game_title_width =
+                    measure_text(game_title, None, game_title_size as u16, 1.0).width;
                 draw_text(
                     game_title,
                     screen_width() / 2.0 - game_title_width / 2.0,
@@ -2607,7 +3063,8 @@ impl Game {
                 current_y += spacing;
                 let developer = "guicybercode";
                 let developer_size = 32.0;
-                let developer_width = measure_text(developer, None, developer_size as u16, 1.0).width;
+                let developer_width =
+                    measure_text(developer, None, developer_size as u16, 1.0).width;
                 draw_text(
                     developer,
                     screen_width() / 2.0 - developer_width / 2.0,
@@ -2618,7 +3075,8 @@ impl Game {
                 current_y += section_spacing;
                 let stack_title = "Technology Stack";
                 let stack_title_size = 24.0;
-                let stack_title_width = measure_text(stack_title, None, stack_title_size as u16, 1.0).width;
+                let stack_title_width =
+                    measure_text(stack_title, None, stack_title_size as u16, 1.0).width;
                 draw_text(
                     stack_title,
                     screen_width() / 2.0 - stack_title_width / 2.0,
@@ -2649,7 +3107,8 @@ impl Game {
                 current_y += section_spacing - spacing;
                 let info_title = "Game Information";
                 let info_title_size = 24.0;
-                let info_title_width = measure_text(info_title, None, info_title_size as u16, 1.0).width;
+                let info_title_width =
+                    measure_text(info_title, None, info_title_size as u16, 1.0).width;
                 draw_text(
                     info_title,
                     screen_width() / 2.0 - info_title_width / 2.0,
@@ -2691,7 +3150,13 @@ impl Game {
                 if self.level_start_fade_timer > 0.0 {
                     let fade_progress = self.level_start_fade_timer / 1.5;
                     let fade_alpha = fade_progress.min(1.0);
-                    draw_rectangle(0.0, 0.0, screen_width(), screen_height(), Color::new(0.0, 0.0, 0.0, fade_alpha));
+                    draw_rectangle(
+                        0.0,
+                        0.0,
+                        screen_width(),
+                        screen_height(),
+                        Color::new(0.0, 0.0, 0.0, fade_alpha),
+                    );
                 }
             }
             GameState::Versus => {
@@ -2708,11 +3173,23 @@ impl Game {
                         p2.draw_vs(camera_x, camera_y, false);
                     }
                 }
-                let p1_score_text = format!("P1: {} kills | {} pts", self.player1_score, self.player1_points);
-                let p2_score_text = format!("P2: {} kills | {} pts", self.player2_score, self.player2_points);
+                let p1_score_text = format!(
+                    "P1: {} kills | {} pts",
+                    self.player1_score, self.player1_points
+                );
+                let p2_score_text = format!(
+                    "P2: {} kills | {} pts",
+                    self.player2_score, self.player2_points
+                );
                 draw_text(&p1_score_text, 20.0, 30.0, 24.0, BLACK);
                 let p2_width = measure_text(&p2_score_text, None, 24u16, 1.0).width;
-                draw_text(&p2_score_text, screen_width() - p2_width - 20.0, 30.0, 24.0, DARKGRAY);
+                draw_text(
+                    &p2_score_text,
+                    screen_width() - p2_width - 20.0,
+                    30.0,
+                    24.0,
+                    DARKGRAY,
+                );
                 let time_text = format!("{}", self.versus_time_remaining as u32);
                 let time_width = measure_text(&time_text, None, 28u16, 1.0).width;
                 let time_color = if self.versus_time_remaining < 60.0 {
@@ -2739,9 +3216,15 @@ impl Game {
                     GRAY,
                 );
                 if self.level_start_fade_timer > 0.0 {
-                    let fade_progress = self.level_start_fade_timer / 1.5; 
+                    let fade_progress = self.level_start_fade_timer / 1.5;
                     let fade_alpha = fade_progress.min(1.0);
-                    draw_rectangle(0.0, 0.0, screen_width(), screen_height(), Color::new(0.0, 0.0, 0.0, fade_alpha));
+                    draw_rectangle(
+                        0.0,
+                        0.0,
+                        screen_width(),
+                        screen_height(),
+                        Color::new(0.0, 0.0, 0.0, fade_alpha),
+                    );
                 }
             }
             GameState::Coop => {
@@ -2769,7 +3252,13 @@ impl Game {
                 if self.level_start_fade_timer > 0.0 {
                     let fade_progress = self.level_start_fade_timer / LEVEL_START_FADE_TIMER;
                     let fade_alpha = fade_progress.min(1.0);
-                    draw_rectangle(0.0, 0.0, screen_width(), screen_height(), Color::new(0.0, 0.0, 0.0, fade_alpha));
+                    draw_rectangle(
+                        0.0,
+                        0.0,
+                        screen_width(),
+                        screen_height(),
+                        Color::new(0.0, 0.0, 0.0, fade_alpha),
+                    );
                 }
             }
             GameState::VersusEnd => {
@@ -2807,10 +3296,18 @@ impl Game {
                     winner_color,
                 );
                 let score_size = 28.0;
-                let p1_final_text = format!("Player 1: {} kills | {} points", self.player1_score, self.player1_points);
-                let p2_final_text = format!("Player 2: {} kills | {} points", self.player2_score, self.player2_points);
-                let p1_final_width = measure_text(&p1_final_text, None, score_size as u16, 1.0).width;
-                let p2_final_width = measure_text(&p2_final_text, None, score_size as u16, 1.0).width;
+                let p1_final_text = format!(
+                    "Player 1: {} kills | {} points",
+                    self.player1_score, self.player1_points
+                );
+                let p2_final_text = format!(
+                    "Player 2: {} kills | {} points",
+                    self.player2_score, self.player2_points
+                );
+                let p1_final_width =
+                    measure_text(&p1_final_text, None, score_size as u16, 1.0).width;
+                let p2_final_width =
+                    measure_text(&p2_final_text, None, score_size as u16, 1.0).width;
                 draw_text(
                     &p1_final_text,
                     screen_width() / 2.0 - p1_final_width / 2.0,
@@ -2851,7 +3348,8 @@ impl Game {
                 let level_count = self.unlocked_levels.len();
                 let start_x = screen_width() / 2.0 - (spacing * (level_count as f32 - 1.0)) / 2.0;
                 let center_y = screen_height() / 2.0;
-                let level_names: Vec<String> = (1..=level_count).map(|i| format!("Level {}", i)).collect();
+                let level_names: Vec<String> =
+                    (1..=level_count).map(|i| format!("Level {}", i)).collect();
                 for i in 0..level_count {
                     let x = start_x + (i as f32 * spacing);
                     let is_selected = i == self.level_selection;
@@ -2865,7 +3363,13 @@ impl Game {
                     };
                     let circle_radius = if is_selected { 35.0 } else { 30.0 };
                     draw_circle(x, center_y, circle_radius, circle_color);
-                    draw_circle_lines(x, center_y, circle_radius, 3.0, if is_selected { WHITE } else { BLACK });
+                    draw_circle_lines(
+                        x,
+                        center_y,
+                        circle_radius,
+                        3.0,
+                        if is_selected { WHITE } else { BLACK },
+                    );
                     let num_text = format!("{}", i + 1);
                     let num_size = 36.0;
                     let num_width = measure_text(&num_text, None, num_size as u16, 1.0).width;
@@ -2875,7 +3379,11 @@ impl Game {
                         center_y + num_size / 3.0,
                         num_size,
                         if is_unlocked {
-                            if is_selected { WHITE } else { BLACK }
+                            if is_selected {
+                                WHITE
+                            } else {
+                                BLACK
+                            }
                         } else {
                             GRAY
                         },
@@ -2937,8 +3445,13 @@ impl Game {
             GameState::Pause => {
                 self.draw_level_world();
                 self.draw_level_hud(true);
-                draw_rectangle(0.0, 0.0, screen_width(), screen_height(),
-                    Color::new(0.0, 0.0, 0.0, 0.6));
+                draw_rectangle(
+                    0.0,
+                    0.0,
+                    screen_width(),
+                    screen_height(),
+                    Color::new(0.0, 0.0, 0.0, 0.6),
+                );
                 let title = "PAUSED";
                 let title_size = 56.0;
                 let title_width = measure_text(title, None, title_size as u16, 1.0).width;
@@ -2952,7 +3465,8 @@ impl Game {
                 let menu_options = vec!["RESUME", "SETTINGS", "CREDITS", "MAIN MENU"];
                 let start_y = screen_height() / 2.0 - 40.0;
                 for (i, option) in menu_options.iter().enumerate() {
-                    let option_width = measure_text(option, None, MENU_OPTION_SIZE as u16, 1.0).width;
+                    let option_width =
+                        measure_text(option, None, MENU_OPTION_SIZE as u16, 1.0).width;
                     let x = screen_width() / 2.0 - option_width / 2.0;
                     let y = start_y + (i as f32 * MENU_OPTION_SPACING);
                     let color = if i == self.pause_selection {
@@ -2966,7 +3480,8 @@ impl Game {
                     draw_text(option, x, y, MENU_OPTION_SIZE, color);
                 }
                 let instructions = "ARROWS/WASD: Navigate | ENTER: Select | P/ESC: Resume";
-                let inst_width = measure_text(instructions, None, MENU_INSTRUCTION_SIZE as u16, 1.0).width;
+                let inst_width =
+                    measure_text(instructions, None, MENU_INSTRUCTION_SIZE as u16, 1.0).width;
                 draw_text(
                     instructions,
                     screen_width() / 2.0 - inst_width / 2.0,
@@ -2978,24 +3493,47 @@ impl Game {
             GameState::Respawn => {
                 let time_remaining = self.respawn_timer;
                 let total_time = 3.0;
-                let progress = 1.0 - (time_remaining / total_time); 
+                let progress = 1.0 - (time_remaining / total_time);
                 let bg_alpha = (progress * 0.8).min(0.8);
-                draw_rectangle(0.0, 0.0, screen_width(), screen_height(), Color::new(0.0, 0.0, 0.0, bg_alpha));
+                draw_rectangle(
+                    0.0,
+                    0.0,
+                    screen_width(),
+                    screen_height(),
+                    Color::new(0.0, 0.0, 0.0, bg_alpha),
+                );
                 let player_size = 64.0;
                 let player_x = screen_width() / 2.0 - player_size / 2.0;
                 let player_y = screen_height() / 2.0 - player_size / 2.0 - 50.0;
                 let player_alpha = (1.0 - progress * 1.5).max(0.0);
                 let player_color = Color::new(0.0, 0.0, 0.0, player_alpha);
                 draw_rectangle(player_x, player_y, player_size, player_size, player_color);
-                draw_rectangle_lines(player_x, player_y, player_size, player_size, 2.0, Color::new(1.0, 1.0, 1.0, player_alpha));
+                draw_rectangle_lines(
+                    player_x,
+                    player_y,
+                    player_size,
+                    player_size,
+                    2.0,
+                    Color::new(1.0, 1.0, 1.0, player_alpha),
+                );
                 let eye_size = 6.0;
                 let eye_y = player_y + 20.0;
-                draw_circle(player_x + 20.0, eye_y, eye_size, Color::new(1.0, 1.0, 1.0, player_alpha));
-                draw_circle(player_x + 44.0, eye_y, eye_size, Color::new(1.0, 1.0, 1.0, player_alpha));
+                draw_circle(
+                    player_x + 20.0,
+                    eye_y,
+                    eye_size,
+                    Color::new(1.0, 1.0, 1.0, player_alpha),
+                );
+                draw_circle(
+                    player_x + 44.0,
+                    eye_y,
+                    eye_size,
+                    Color::new(1.0, 1.0, 1.0, player_alpha),
+                );
                 let lives_text = format!("Lives: {}", self.lives);
                 let lives_size = 48.0;
                 let lives_width = measure_text(&lives_text, None, lives_size as u16, 1.0).width;
-                let lives_alpha = 1.0 - (progress * 0.5).min(0.5); 
+                let lives_alpha = 1.0 - (progress * 0.5).min(0.5);
                 let lives_color = Color::new(1.0, 1.0, 1.0, lives_alpha);
                 draw_text(
                     &lives_text,
@@ -3007,7 +3545,8 @@ impl Game {
                 let countdown = (time_remaining.ceil() as u32).max(1);
                 let countdown_text = format!("Respawn in {}...", countdown);
                 let countdown_size = 32.0;
-                let countdown_width = measure_text(&countdown_text, None, countdown_size as u16, 1.0).width;
+                let countdown_width =
+                    measure_text(&countdown_text, None, countdown_size as u16, 1.0).width;
                 draw_text(
                     &countdown_text,
                     screen_width() / 2.0 - countdown_width / 2.0,
@@ -3018,12 +3557,18 @@ impl Game {
             }
             GameState::GameOver => {
                 let fade_progress = if self.game_over_fade_timer > 0.0 {
-                    (2.0 - self.game_over_fade_timer) / 2.0 
+                    (2.0 - self.game_over_fade_timer) / 2.0
                 } else {
-                    1.0 
+                    1.0
                 };
                 let fade_alpha = fade_progress.min(1.0);
-                draw_rectangle(0.0, 0.0, screen_width(), screen_height(), Color::new(0.0, 0.0, 0.0, fade_alpha));
+                draw_rectangle(
+                    0.0,
+                    0.0,
+                    screen_width(),
+                    screen_height(),
+                    Color::new(0.0, 0.0, 0.0, fade_alpha),
+                );
                 if fade_alpha >= 1.0 {
                     let text = "GAME OVER";
                     let text_size = 60.0;
@@ -3045,7 +3590,8 @@ impl Game {
                         score_size,
                         WHITE,
                     );
-                    let coins_text = format!("Coins: {}/{}", self.coins_collected, self.total_coins);
+                    let coins_text =
+                        format!("Coins: {}/{}", self.coins_collected, self.total_coins);
                     let coins_size = 24.0;
                     let coins_width = measure_text(&coins_text, None, coins_size as u16, 1.0).width;
                     draw_text(
@@ -3057,7 +3603,8 @@ impl Game {
                     );
                     let restart_text = "SPACE or ENTER: Restart | ESC: Menu";
                     let restart_size = 22.0;
-                    let restart_width = measure_text(restart_text, None, restart_size as u16, 1.0).width;
+                    let restart_width =
+                        measure_text(restart_text, None, restart_size as u16, 1.0).width;
                     draw_text(
                         restart_text,
                         screen_width() / 2.0 - restart_width / 2.0,
@@ -3114,7 +3661,8 @@ impl Game {
                 {
                     let unlock_text = format!("Level {} unlocked!", self.current_level + 1);
                     let unlock_size = 24.0;
-                    let unlock_width = measure_text(&unlock_text, None, unlock_size as u16, 1.0).width;
+                    let unlock_width =
+                        measure_text(&unlock_text, None, unlock_size as u16, 1.0).width;
                     draw_text(
                         &unlock_text,
                         screen_width() / 2.0 - unlock_width / 2.0,
@@ -3125,7 +3673,8 @@ impl Game {
                 }
                 let continue_text = "ENTER/SPACE: Continue | ESC: Level Select";
                 let continue_size = 20.0;
-                let continue_width = measure_text(continue_text, None, continue_size as u16, 1.0).width;
+                let continue_width =
+                    measure_text(continue_text, None, continue_size as u16, 1.0).width;
                 draw_text(
                     continue_text,
                     screen_width() / 2.0 - continue_width / 2.0,

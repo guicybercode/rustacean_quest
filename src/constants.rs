@@ -26,11 +26,7 @@ pub const FALL_DEATH_Y: f32 = 600.0;
 pub const SCREEN_WIDTH: u32 = 800;
 pub const SCREEN_HEIGHT: u32 = 600;
 
-pub const RESOLUTIONS: [(u32, u32); 3] = [
-    (800, 600),
-    (1024, 768),
-    (1280, 720),
-];
+pub const RESOLUTIONS: [(u32, u32); 3] = [(800, 600), (1024, 768), (1280, 720)];
 
 pub const TIME_LIMIT: f32 = 300.0;
 pub const TIME_WARNING_RED: f32 = 30.0;

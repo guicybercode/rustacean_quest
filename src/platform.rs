@@ -10,7 +10,12 @@ pub struct Platform {
 
 impl Platform {
     pub fn new(x: f32, y: f32, width: f32, height: f32) -> Self {
-        Self { x, y, width, height }
+        Self {
+            x,
+            y,
+            width,
+            height,
+        }
     }
 
     #[inline]
@@ -32,29 +37,32 @@ impl Platform {
         if !self.check_collision(x, y, w, h) {
             return None;
         }
-        
+
         let overlap_left = (x + w) - self.x;
         let overlap_right = (self.x + self.width) - x;
         let overlap_top = (y + h) - self.y;
         let overlap_bottom = (self.y + self.height) - y;
-        
-        let min_overlap = overlap_left.min(overlap_right).min(overlap_top).min(overlap_bottom);
-        
+
+        let min_overlap = overlap_left
+            .min(overlap_right)
+            .min(overlap_top)
+            .min(overlap_bottom);
+
         if min_overlap == overlap_top && vel_y >= 0.0 {
             return Some((x, self.y - h, true));
         }
-        
+
         if min_overlap == overlap_bottom && vel_y < 0.0 {
             return Some((x, self.y + self.height, false));
         }
-        
+
         if min_overlap == overlap_left {
             return Some((self.x - w, y, false));
         }
         if min_overlap == overlap_right {
             return Some((self.x + self.width, y, false));
         }
-        
+
         if overlap_top < overlap_bottom {
             Some((x, self.y - h, true))
         } else {
@@ -65,7 +73,7 @@ impl Platform {
     pub fn draw(&self, camera_x: f32, camera_y: f32) {
         let screen_x = self.x - camera_x;
         let screen_y = self.y - camera_y;
-        
+
         draw_rectangle(screen_x, screen_y, self.width, self.height, WHITE);
         draw_rectangle_lines(screen_x, screen_y, self.width, self.height, 2.0, BLACK);
     }
@@ -73,7 +81,7 @@ impl Platform {
 
 pub fn create_level_platforms(level: usize) -> Vec<Platform> {
     let mut platforms = Vec::with_capacity(crate::constants::ESTIMATED_PLATFORMS_PER_LEVEL);
-    
+
     match level {
         1 => {
             platforms.push(Platform::new(0.0, 550.0, 4200.0, 50.0));
@@ -191,6 +199,6 @@ pub fn create_level_platforms(level: usize) -> Vec<Platform> {
             platforms.push(Platform::new(0.0, 550.0, 4200.0, 50.0));
         }
     }
-    
+
     platforms
 }

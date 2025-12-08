@@ -1,5 +1,5 @@
-use macroquad::prelude::*;
 use crate::constants::*;
+use macroquad::prelude::*;
 
 pub struct Coin {
     pub x: f32,
@@ -34,7 +34,7 @@ impl Coin {
         if self.collected {
             return false;
         }
-        
+
         if player_x < self.x + COIN_SIZE
             && player_x + player_w > self.x
             && player_y < self.y + COIN_SIZE
@@ -50,13 +50,13 @@ impl Coin {
         if self.collected {
             return;
         }
-        
+
         let screen_x = self.x - camera_x;
         let screen_y = self.y - camera_y;
-        
+
         draw_circle(screen_x + 8.0, screen_y + 8.0, 8.0, WHITE);
         draw_circle_lines(screen_x + 8.0, screen_y + 8.0, 8.0, 2.0, BLACK);
-        
+
         let center_x = screen_x + 8.0;
         let center_y = screen_y + 8.0;
         let end_x = center_x + 6.0 * self.rotation.cos();
@@ -67,7 +67,7 @@ impl Coin {
 
 pub fn create_level_coins(level: usize) -> Vec<Coin> {
     let mut coins = Vec::with_capacity(crate::constants::ESTIMATED_COINS_PER_LEVEL);
-    
+
     match level {
         1 => {
             coins.push(Coin::new(250.0, 420.0));
@@ -158,6 +158,6 @@ pub fn create_level_coins(level: usize) -> Vec<Coin> {
         }
         _ => {}
     }
-    
+
     coins
 }
