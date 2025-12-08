@@ -36,19 +36,19 @@ pub fn is_name_valid(name: &str) -> (bool, Option<String>) {
     if name.len() < MIN_NAME_LENGTH {
         return (
             false,
-                Some(format!(
-                    "Name must be at least {} characters",
-                    MIN_NAME_LENGTH
-                )),
+            Some(format!(
+                "Name must be at least {} characters",
+                MIN_NAME_LENGTH
+            )),
         );
     }
     if name.len() > MAX_NAME_LENGTH {
         return (
             false,
-                Some(format!(
-                    "Name must be at most {} characters",
-                    MAX_NAME_LENGTH
-                )),
+            Some(format!(
+                "Name must be at most {} characters",
+                MAX_NAME_LENGTH
+            )),
         );
     }
 
@@ -67,7 +67,10 @@ pub fn is_name_valid(name: &str) -> (bool, Option<String>) {
     let name_lower = name.to_lowercase();
     for blocked_word in BLOCKED_WORDS {
         if name_lower.contains(blocked_word) {
-            return (false, Some("Name contains inappropriate content".to_string()));
+            return (
+                false,
+                Some("Name contains inappropriate content".to_string()),
+            );
         }
     }
 

@@ -1,5 +1,5 @@
-use macroquad::prelude::*;
 use crate::constants::*;
+use macroquad::prelude::*;
 
 pub struct Transition {
     pub timer: f32,
@@ -63,5 +63,3 @@ impl Transition {
         self.target_state.is_some() && self.alpha > 0.0
     }
 }
-
-

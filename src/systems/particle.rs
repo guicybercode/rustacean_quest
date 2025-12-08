@@ -1,5 +1,5 @@
-use macroquad::prelude::*;
 use crate::constants::*;
+use macroquad::prelude::*;
 
 #[derive(Clone, Copy)]
 pub struct Particle {
@@ -99,4 +99,3 @@ impl CoinBounce {
         draw_circle_lines(screen_x, screen_y, (COIN_SIZE / 2.0) * scale, 2.0, color);
     }
 }
-

@@ -8,7 +8,7 @@ use crate::name_filter;
 use crate::platform::{create_level_platforms, Platform};
 use crate::player::Player;
 use crate::save::SaveData;
-use crate::systems::{Particle, CoinBounce, CameraShake, Transition, MenuAnimation};
+use crate::systems::{CameraShake, CoinBounce, MenuAnimation, Particle, Transition};
 use macroquad::prelude::*;
 
 pub enum GameState {
@@ -1455,7 +1455,8 @@ impl Game {
                     self.state = GameState::LevelComplete;
                 }
                 let screen_width = screen_width();
-                self.camera.update(self.player.x, screen_width, self.camera_shake.get_offset());
+                self.camera
+                    .update(self.player.x, screen_width, self.camera_shake.get_offset());
             }
             GameState::LevelComplete => {
                 if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {

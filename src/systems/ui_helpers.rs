@@ -1,5 +1,5 @@
-use macroquad::prelude::*;
 use crate::constants::*;
+use macroquad::prelude::*;
 
 pub struct MenuAnimation {
     animations: Vec<f32>,
@@ -37,5 +37,3 @@ impl MenuAnimation {
         }
     }
 }
-
-
