@@ -61,7 +61,7 @@ impl AudioManager {
     async fn load_sound_safe(bytes: &[u8], name: &str) -> Result<Sound, String> {
         load_sound_from_bytes(bytes)
             .await
-            .map_err(|e| format!("Erro ao carregar som '{}': {:?}", name, e))
+            .map_err(|e| format!("Error loading sound '{}': {:?}", name, e))
     }
 
     fn generate_beep_bytes(frequency: f32, duration: f32, sample_rate: u32) -> Vec<u8> {
@@ -127,7 +127,7 @@ impl AudioManager {
         let jump_special_bytes = Self::generate_beep_bytes(660.0, 0.15, 44100);
         let footstep_special_bytes = Self::generate_beep_bytes(350.0, 0.1, 44100);
 
-        match Self::load_sound_safe(&jump_bytes, "pulo").await {
+        match Self::load_sound_safe(&jump_bytes, "jump").await {
             Ok(sound) => self.jump_sound = Some(sound),
             Err(e) => {
                 eprintln!("{}", e);
@@ -135,7 +135,7 @@ impl AudioManager {
             }
         }
 
-        match Self::load_sound_safe(&coin_bytes, "moeda").await {
+        match Self::load_sound_safe(&coin_bytes, "coin").await {
             Ok(sound) => self.coin_sound = Some(sound),
             Err(e) => {
                 eprintln!("{}", e);
@@ -143,7 +143,7 @@ impl AudioManager {
             }
         }
 
-        match Self::load_sound_safe(&death_bytes, "morte").await {
+        match Self::load_sound_safe(&death_bytes, "death").await {
             Ok(sound) => self.death_sound = Some(sound),
             Err(e) => {
                 eprintln!("{}", e);
@@ -151,7 +151,7 @@ impl AudioManager {
             }
         }
 
-        match Self::load_sound_safe(&enemy_death_bytes, "morte de inimigo").await {
+        match Self::load_sound_safe(&enemy_death_bytes, "enemy_death").await {
             Ok(sound) => self.enemy_death_sound = Some(sound),
             Err(e) => {
                 eprintln!("{}", e);
@@ -159,7 +159,7 @@ impl AudioManager {
             }
         }
 
-        match Self::load_sound_safe(&level_complete_bytes, "fase completa").await {
+        match Self::load_sound_safe(&level_complete_bytes, "level_complete").await {
             Ok(sound) => self.level_complete_sound = Some(sound),
             Err(e) => {
                 eprintln!("{}", e);
@@ -167,7 +167,7 @@ impl AudioManager {
             }
         }
 
-        match Self::load_sound_safe(&menu_select_bytes, "menu").await {
+        match Self::load_sound_safe(&menu_select_bytes, "menu_select").await {
             Ok(sound) => self.menu_select_sound = Some(sound),
             Err(e) => {
                 eprintln!("{}", e);
@@ -175,7 +175,7 @@ impl AudioManager {
             }
         }
 
-        match Self::load_sound_safe(&footstep_bytes, "passos").await {
+        match Self::load_sound_safe(&footstep_bytes, "footstep").await {
             Ok(sound) => self.footstep_sound = Some(sound),
             Err(e) => {
                 eprintln!("{}", e);
@@ -183,7 +183,7 @@ impl AudioManager {
             }
         }
 
-        match Self::load_sound_safe(&jump_special_bytes, "pulo especial").await {
+        match Self::load_sound_safe(&jump_special_bytes, "jump_special").await {
             Ok(sound) => self.jump_sound_special = Some(sound),
             Err(e) => {
                 eprintln!("{}", e);
@@ -191,7 +191,7 @@ impl AudioManager {
             }
         }
 
-        match Self::load_sound_safe(&footstep_special_bytes, "passos especiais").await {
+        match Self::load_sound_safe(&footstep_special_bytes, "footstep_special").await {
             Ok(sound) => self.footstep_sound_special = Some(sound),
             Err(e) => {
                 eprintln!("{}", e);
@@ -215,34 +215,34 @@ impl AudioManager {
     pub fn play_jump(&self, special: bool) {
         if self.sounds_enabled {
             if special {
-                Self::play_sound(&self.jump_sound_special, 0.8);
+                Self::play_sound(&self.jump_sound_special, 0.7);
             } else {
-                Self::play_sound(&self.jump_sound, 0.8);
+                Self::play_sound(&self.jump_sound, 0.7);
             }
         }
     }
 
     pub fn play_coin(&self) {
         if self.sounds_enabled {
-            Self::play_sound(&self.coin_sound, 0.8);
+            Self::play_sound(&self.coin_sound, 0.9);
         }
     }
 
     pub fn play_death(&self) {
         if self.sounds_enabled {
-            Self::play_sound(&self.death_sound, 0.8);
+            Self::play_sound(&self.death_sound, 0.85);
         }
     }
 
     pub fn play_enemy_death(&self) {
         if self.sounds_enabled {
-            Self::play_sound(&self.enemy_death_sound, 0.8);
+            Self::play_sound(&self.enemy_death_sound, 0.9);
         }
     }
 
     pub fn play_level_complete(&self) {
         if self.sounds_enabled {
-            Self::play_sound(&self.level_complete_sound, 0.8);
+            Self::play_sound(&self.level_complete_sound, 0.85);
         }
     }
 
@@ -255,9 +255,9 @@ impl AudioManager {
     pub fn play_footstep(&self, special: bool) {
         if self.sounds_enabled {
             if special {
-                Self::play_sound(&self.footstep_sound_special, 0.3);
+                Self::play_sound(&self.footstep_sound_special, 0.15);
             } else {
-                Self::play_sound(&self.footstep_sound, 0.3);
+                Self::play_sound(&self.footstep_sound, 0.15);
             }
         }
     }

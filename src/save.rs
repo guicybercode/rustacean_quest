@@ -50,19 +50,19 @@ impl SaveData {
 
     pub fn save_to_file(&self, path: &str) -> Result<(), String> {
         let json = serde_json::to_string_pretty(self)
-            .map_err(|e| format!("Erro ao serializar save: {}", e))?;
+            .map_err(|e| format!("Error serializing save: {}", e))?;
 
-        std::fs::write(path, json).map_err(|e| format!("Erro ao escrever arquivo: {}", e))?;
+        std::fs::write(path, json).map_err(|e| format!("Error writing file: {}", e))?;
 
         Ok(())
     }
 
     pub fn load_from_file(path: &str) -> Result<Self, String> {
         let content =
-            std::fs::read_to_string(path).map_err(|e| format!("Erro ao ler arquivo: {}", e))?;
+            std::fs::read_to_string(path).map_err(|e| format!("Error reading file: {}", e))?;
 
         let save_data: SaveData = serde_json::from_str(&content)
-            .map_err(|e| format!("Erro ao deserializar save: {}", e))?;
+            .map_err(|e| format!("Error deserializing save: {}", e))?;
 
         Ok(save_data)
     }
@@ -94,7 +94,7 @@ impl SaveData {
     pub fn delete_save(slot: usize) -> Result<(), String> {
         let path = Self::get_save_path(slot);
         if Self::save_exists(&path) {
-            std::fs::remove_file(&path).map_err(|e| format!("Erro ao apagar arquivo: {}", e))?;
+            std::fs::remove_file(&path).map_err(|e| format!("Error deleting file: {}", e))?;
         }
         Ok(())
     }

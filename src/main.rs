@@ -11,6 +11,7 @@ mod name_filter;
 mod platform;
 mod player;
 mod save;
+mod systems;
 
 fn window_conf() -> Conf {
     Conf {

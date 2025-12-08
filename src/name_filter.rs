@@ -36,19 +36,19 @@ pub fn is_name_valid(name: &str) -> (bool, Option<String>) {
     if name.len() < MIN_NAME_LENGTH {
         return (
             false,
-            Some(format!(
-                "O nome deve ter pelo menos {} caracteres",
-                MIN_NAME_LENGTH
-            )),
+                Some(format!(
+                    "Name must be at least {} characters",
+                    MIN_NAME_LENGTH
+                )),
         );
     }
     if name.len() > MAX_NAME_LENGTH {
         return (
             false,
-            Some(format!(
-                "O nome deve ter no máximo {} caracteres",
-                MAX_NAME_LENGTH
-            )),
+                Some(format!(
+                    "Name must be at most {} characters",
+                    MAX_NAME_LENGTH
+                )),
         );
     }
 
@@ -57,7 +57,7 @@ pub fn is_name_valid(name: &str) -> (bool, Option<String>) {
             return (
                 false,
                 Some(
-                    "O nome pode conter apenas letras, números, espaços, hífens e underscores"
+                    "Name can only contain letters, numbers, spaces, hyphens and underscores"
                         .to_string(),
                 ),
             );
@@ -67,7 +67,7 @@ pub fn is_name_valid(name: &str) -> (bool, Option<String>) {
     let name_lower = name.to_lowercase();
     for blocked_word in BLOCKED_WORDS {
         if name_lower.contains(blocked_word) {
-            return (false, Some("O nome contém conteúdo inadequado".to_string()));
+            return (false, Some("Name contains inappropriate content".to_string()));
         }
     }
 

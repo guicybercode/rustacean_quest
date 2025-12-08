@@ -8,6 +8,7 @@ use crate::name_filter;
 use crate::platform::{create_level_platforms, Platform};
 use crate::player::Player;
 use crate::save::SaveData;
+use crate::systems::{Particle, CoinBounce, CameraShake, Transition, MenuAnimation};
 use macroquad::prelude::*;
 
 pub enum GameState {
@@ -74,8 +75,6 @@ pub struct Game {
     sound_enabled: bool,
     resolution_index: usize,
     available_resolutions: Vec<(u32, u32)>,
-    #[allow(dead_code)]
-    fullscreen: bool,
     score: u32,
     lives: u32,
     respawn_timer: f32,
@@ -100,9 +99,6 @@ pub struct Game {
     name_input_error: Option<String>,
     tutorial_page: usize,
     tutorial_completed: bool,
-    transition_timer: f32,
-    transition_alpha: f32,
-    transition_target_state: Option<GameState>,
     versus_played: bool,
     has_new_save: bool,
     last_save_timestamp: u64,
@@ -123,15 +119,16 @@ pub struct Game {
     controls_waiting_input: Option<(usize, ControlAction)>,
     error_message: Option<String>,
     error_timer: f32,
-    #[allow(dead_code)]
-    asset_load_errors: Vec<String>,
     difficulty_multiplier: f32,
     colorblind_mode: bool,
     font_size_scale: f32,
     assist_mode: bool,
-    camera_shake_timer: f32,
-    camera_shake_intensity: f32,
-    particles: Vec<(f32, f32, f32, f32, f32)>,
+    camera_shake: CameraShake,
+    particles: Vec<Particle>,
+    coin_bounces: Vec<CoinBounce>,
+    menu_animation: MenuAnimation,
+    pause_animation: MenuAnimation,
+    transition: Transition,
 }
 impl Game {
     pub async fn new() -> Self {
@@ -139,7 +136,6 @@ impl Game {
         unlocked_levels[0] = true;
         let mut audio = AudioManager::new();
         audio.load_sounds().await;
-        let mut asset_load_errors = Vec::new();
         let mut enemy_textures = Vec::with_capacity(2);
         let player_sprite_texture_p1 = match load_texture("assets/crab1.png").await {
             Ok(texture) => {
@@ -154,9 +150,8 @@ impl Game {
                     Some(std::rc::Rc::new(texture))
                 }
                 Err(e) => {
-                    let error_msg = format!("Erro ao carregar sprite P1: {:?}", e);
+                    let error_msg = format!("Error loading sprite P1: {:?}", e);
                     eprintln!("{}", error_msg);
-                    asset_load_errors.push(error_msg);
                     None
                 }
             },
@@ -174,9 +169,8 @@ impl Game {
                     Some(std::rc::Rc::new(texture))
                 }
                 Err(e) => {
-                    let error_msg = format!("Erro ao carregar sprite P2: {:?}", e);
+                    let error_msg = format!("Error loading sprite P2: {:?}", e);
                     eprintln!("{}", error_msg);
-                    asset_load_errors.push(error_msg);
                     None
                 }
             },
@@ -212,7 +206,6 @@ impl Game {
             sound_enabled: true,
             resolution_index: 0,
             available_resolutions: Self::get_common_resolutions(),
-            fullscreen: false,
             score: 0,
             lives: DEFAULT_LIVES,
             respawn_timer: 0.0,
@@ -237,9 +230,6 @@ impl Game {
             name_input_error: None,
             tutorial_page: 0,
             tutorial_completed: false,
-            transition_timer: 0.0,
-            transition_alpha: 0.0,
-            transition_target_state: None,
             versus_played: false,
             has_new_save: false,
             last_save_timestamp: 0,
@@ -274,14 +264,16 @@ impl Game {
             controls_waiting_input: None,
             error_message: None,
             error_timer: 0.0,
-            asset_load_errors: Vec::new(),
             difficulty_multiplier: DIFFICULTY_NORMAL,
             colorblind_mode: false,
             font_size_scale: 1.0,
             assist_mode: false,
-            camera_shake_timer: 0.0,
-            camera_shake_intensity: 0.0,
+            camera_shake: CameraShake::new(),
             particles: Vec::with_capacity(PARTICLE_COUNT * 10),
+            coin_bounces: Vec::new(),
+            menu_animation: MenuAnimation::new(7),
+            pause_animation: MenuAnimation::new(4),
+            transition: Transition::new(),
         }
     }
     fn get_common_resolutions() -> Vec<(u32, u32)> {
@@ -386,16 +378,67 @@ impl Game {
         self.error_message = Some(message);
         self.error_timer = 5.0;
     }
+    fn handle_player_death(&mut self) {
+        self.audio.play_death();
+        if self.lives > 0 {
+            self.lives -= 1;
+        }
+        if self.lives == 0 {
+            self.game_over_fade_timer = GAME_OVER_FADE_TIMER;
+            self.state = GameState::GameOver;
+        } else {
+            self.respawn_timer = RESPAWN_TIMER;
+            self.state = GameState::Respawn;
+        }
+    }
+    fn handle_coin_collection(&mut self, coin_x: f32, coin_y: f32) {
+        self.coins_collected += 1;
+        self.score += SCORE_COIN;
+        self.audio.play_coin();
+        self.coin_bounces.push(CoinBounce::new(
+            coin_x + COIN_SIZE / 2.0,
+            coin_y + COIN_SIZE / 2.0,
+        ));
+        for _ in 0..PARTICLE_COUNT {
+            let angle = rand::gen_range(0.0, std::f32::consts::PI * 2.0);
+            let speed = rand::gen_range(40.0, 90.0);
+            self.particles.push(Particle::new(
+                coin_x + COIN_SIZE / 2.0,
+                coin_y + COIN_SIZE / 2.0,
+                angle.cos() * speed,
+                angle.sin() * speed,
+            ));
+        }
+    }
+    fn handle_player_death_versus_p1(&mut self) {
+        self.audio.play_death();
+        if self.lives > 0 {
+            self.lives -= 1;
+        }
+        if self.lives == 0 {
+            self.game_over_fade_timer = GAME_OVER_FADE_TIMER;
+            self.state = GameState::GameOver;
+        } else {
+            self.respawn_timer_p1 = RESPAWN_TIMER;
+        }
+    }
+    fn handle_player_death_versus_p2(&mut self) {
+        self.audio.play_death();
+        if self.lives > 0 {
+            self.lives -= 1;
+        }
+        if self.lives == 0 {
+            self.game_over_fade_timer = GAME_OVER_FADE_TIMER;
+            self.state = GameState::GameOver;
+        } else {
+            self.respawn_timer_p2 = RESPAWN_TIMER;
+        }
+    }
     fn start_transition(&mut self, target_state: GameState) {
         if matches!(self.state, GameState::Menu) {
             self.state = target_state;
-            self.transition_timer = 0.0;
-            self.transition_alpha = 0.0;
-            self.transition_target_state = None;
         } else {
-            self.transition_timer = 0.0;
-            self.transition_alpha = 1.0;
-            self.transition_target_state = Some(target_state);
+            self.transition.start(target_state);
         }
     }
     fn transition_to_menu(&mut self) {
@@ -414,32 +457,24 @@ impl Game {
         }
     }
     fn update_transition(&mut self, dt: f32) {
-        if self.transition_target_state.is_none() {
-            if self.transition_timer > 0.0 {
-                self.transition_timer = 0.0;
-                self.transition_alpha = 0.0;
-            }
-            return;
-        }
-        self.transition_timer += dt;
-        let progress = (self.transition_timer / TRANSITION_DURATION).min(1.0);
-        self.transition_alpha = 1.0 - progress;
-        if progress >= 1.0 {
-            if let Some(target) = self.transition_target_state.take() {
-                self.state = target;
-            }
-            self.transition_timer = 0.0;
-            self.transition_alpha = 0.0;
+        if let Some(target) = self.transition.update(dt) {
+            self.state = target;
         }
     }
     fn draw_transition(&self) {
-        if self.transition_timer > 0.0 && self.transition_alpha > 0.0 {
+        self.transition.draw();
+    }
+    fn draw_level_start_fade(&self) {
+        if self.level_start_fade_timer > 0.0 {
+            let fade_progress = self.level_start_fade_timer / LEVEL_START_FADE_TIMER;
+            let eased_progress = fade_progress * fade_progress;
+            let fade_alpha = eased_progress.min(1.0);
             draw_rectangle(
                 0.0,
                 0.0,
                 screen_width(),
                 screen_height(),
-                Color::new(0.0, 0.0, 0.0, self.transition_alpha),
+                Color::new(0.0, 0.0, 0.0, fade_alpha),
             );
         }
     }
@@ -720,13 +755,18 @@ impl Game {
                 self.error_message = None;
             }
         }
-        self.particles.iter_mut().for_each(|p| p.4 -= dt);
-        self.particles.retain(|p| p.4 > 0.0);
+        self.particles.iter_mut().for_each(|p| p.update(dt));
+        self.particles.retain(|p| p.is_alive());
         let max_particles = PARTICLE_COUNT * 20;
         if self.particles.len() > max_particles {
             let excess = self.particles.len() - max_particles;
             self.particles.drain(0..excess);
         }
+        self.coin_bounces.iter_mut().for_each(|b| b.update(dt));
+        self.coin_bounces.retain(|b| b.is_alive());
+        self.menu_animation.update(dt);
+        self.pause_animation.update(dt);
+        self.camera_shake.update(dt);
 
         if matches!(self.state, GameState::Menu) {
             self.save_check_timer += dt;
@@ -738,7 +778,7 @@ impl Game {
             self.save_check_timer = 0.0;
         }
 
-        if self.transition_target_state.is_some() && !matches!(self.state, GameState::Menu) {
+        if self.transition.is_active() && !matches!(self.state, GameState::Menu) {
             return;
         }
 
@@ -765,6 +805,7 @@ impl Game {
                     if self.menu_selection > 0 {
                         self.menu_selection -= 1;
                         self.menu_animation_time = 0.0;
+                        self.menu_animation.trigger(self.menu_selection);
                         self.audio.play_menu_select();
                     }
                 }
@@ -772,6 +813,7 @@ impl Game {
                     if self.menu_selection < 6 {
                         self.menu_selection += 1;
                         self.menu_animation_time = 0.0;
+                        self.menu_animation.trigger(self.menu_selection);
                         self.audio.play_menu_select();
                     }
                 }
@@ -879,7 +921,7 @@ impl Game {
                         let path = SaveData::get_save_path(self.continue_selection);
                         if SaveData::save_exists(&path) {
                             if let Err(e) = self.load_game(self.continue_selection) {
-                                let error_msg = format!("Erro ao carregar save: {}", e);
+                                let error_msg = format!("Error loading save: {}", e);
                                 eprintln!("{}", error_msg);
                                 self.show_error(error_msg);
                             } else {
@@ -905,7 +947,7 @@ impl Game {
                 } else {
                     if is_key_pressed(KeyCode::Y) {
                         if let Err(e) = SaveData::delete_save(self.continue_selection) {
-                            let error_msg = format!("Erro ao apagar save: {}", e);
+                            let error_msg = format!("Error deleting save: {}", e);
                             eprintln!("{}", error_msg);
                             self.show_error(error_msg);
                         }
@@ -1315,6 +1357,7 @@ impl Game {
                 let jumped = self.player.handle_jump_custom(p1_jump);
                 if jumped {
                     self.audio.play_jump(self.is_easter_egg());
+                    self.camera_shake.trigger_jump();
                 }
                 self.player.update_animation(dt);
                 if self.player.on_ground && self.player.vel_x.abs() > MIN_VELOCITY_FOR_FOOTSTEP {
@@ -1322,6 +1365,7 @@ impl Game {
                     if self.footstep_timer >= FOOTSTEP_INTERVAL {
                         self.audio.play_footstep(self.is_easter_egg());
                         self.footstep_timer = 0.0;
+                        self.camera_shake.trigger_footstep();
                     }
                 } else {
                     self.footstep_timer = 0.0;
@@ -1337,18 +1381,9 @@ impl Game {
                     self.player.vel_x = 0.0;
                 }
                 if self.player.y > FALL_DEATH_Y {
-                    self.audio.play_death();
-                    if self.lives > 0 {
-                        self.lives -= 1;
-                    }
-                    if self.lives == 0 {
-                        self.game_over_fade_timer = GAME_OVER_FADE_TIMER;
-                        self.state = GameState::GameOver;
-                    } else {
-                        self.respawn_timer = RESPAWN_TIMER;
-                        self.state = GameState::Respawn;
-                    }
+                    self.handle_player_death();
                 }
+                let mut player_vel_y_update = None;
                 for enemy in &mut self.enemies {
                     if !enemy.alive {
                         continue;
@@ -1361,48 +1396,47 @@ impl Game {
                     enemy.check_ground_collision(GROUND_Y);
                     match enemy.check_player_collision(px, py, pw, ph, self.player.vel_y) {
                         Some(true) => {
-                            self.audio.play_death();
-                            if self.lives > 0 {
-                                self.lives -= 1;
-                            }
-                            if self.lives == 0 {
-                                self.game_over_fade_timer = GAME_OVER_FADE_TIMER;
-                                self.state = GameState::GameOver;
-                            } else {
-                                self.respawn_timer = RESPAWN_TIMER;
-                                self.state = GameState::Respawn;
-                            }
+                            self.handle_player_death();
                             break;
                         }
                         Some(false) => {
+                            let enemy_x = enemy.x;
+                            let enemy_y = enemy.y;
+                            let enemy_width = enemy.width;
+                            let enemy_height = enemy.height;
+                            player_vel_y_update = Some(JUMP_FORCE * JUMP_BOUNCE_MULTIPLIER);
                             self.audio.play_enemy_death();
                             self.score += SCORE_ENEMY;
-                            self.player.vel_y = JUMP_FORCE * JUMP_BOUNCE_MULTIPLIER;
+                            self.camera_shake.trigger_kill();
+                            for _ in 0..PARTICLE_COUNT {
+                                let angle = rand::gen_range(0.0, std::f32::consts::PI * 2.0);
+                                let speed = rand::gen_range(40.0, 100.0);
+                                self.particles.push(Particle::new(
+                                    enemy_x + enemy_width / 2.0,
+                                    enemy_y + enemy_height / 2.0,
+                                    angle.cos() * speed,
+                                    angle.sin() * speed,
+                                ));
+                            }
                         }
                         None => {}
                     }
                 }
+                if let Some(vel_y) = player_vel_y_update {
+                    self.player.vel_y = vel_y;
+                }
+                let mut coins_to_collect = Vec::new();
                 for coin in &mut self.coins {
                     if coin.collected {
                         continue;
                     }
                     coin.update(effective_dt);
                     if coin.check_collection(px, py, pw, ph) {
-                        self.coins_collected += 1;
-                        self.score += SCORE_COIN;
-                        self.audio.play_coin();
-                        for _ in 0..PARTICLE_COUNT / 2 {
-                            let angle = rand::gen_range(0.0, std::f32::consts::PI * 2.0);
-                            let speed = rand::gen_range(30.0, 80.0);
-                            self.particles.push((
-                                coin.x + COIN_SIZE / 2.0,
-                                coin.y + COIN_SIZE / 2.0,
-                                angle.cos() * speed,
-                                angle.sin() * speed,
-                                PARTICLE_LIFETIME,
-                            ));
-                        }
+                        coins_to_collect.push((coin.x, coin.y));
                     }
+                }
+                for (coin_x, coin_y) in coins_to_collect {
+                    self.handle_coin_collection(coin_x, coin_y);
                 }
                 if self.player.x > LEVEL_COMPLETE_X || self.coins_collected >= self.total_coins {
                     let time_bonus = (self.time_remaining * SCORE_TIME_BONUS) as u32;
@@ -1414,20 +1448,14 @@ impl Game {
                         self.unlocked_levels[self.current_level] = true;
                     }
                     if let Err(e) = self.save_game(0) {
-                        let error_msg = format!("Erro ao salvar jogo: {}", e);
+                        let error_msg = format!("Error saving game: {}", e);
                         eprintln!("{}", error_msg);
                         self.show_error(error_msg);
                     }
                     self.state = GameState::LevelComplete;
                 }
                 let screen_width = screen_width();
-                let shake = if self.camera_shake_timer > 0.0 {
-                    let random = ((get_time() * 1000.0) as u32 % 100) as f32 / 100.0;
-                    (random - 0.5) * self.camera_shake_intensity
-                } else {
-                    0.0
-                };
-                self.camera.update(self.player.x, screen_width, shake);
+                self.camera.update(self.player.x, screen_width, self.camera_shake.get_offset());
             }
             GameState::LevelComplete => {
                 if is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space) {
@@ -1639,12 +1667,7 @@ impl Game {
                 if let Some(ref p2) = self.player2 {
                     let center_x = (self.player.x + p2.x) / 2.0;
                     let screen_width = screen_width();
-                    let shake = if self.camera_shake_timer > 0.0 {
-                        let random = ((get_time() * 1000.0) as u32 % 100) as f32 / 100.0;
-                        (random - 0.5) * self.camera_shake_intensity
-                    } else {
-                        0.0
-                    };
+                    let shake = self.camera_shake.get_offset();
                     self.camera.update(center_x, screen_width, shake);
                 }
             }
@@ -1879,6 +1902,8 @@ impl Game {
                         }
                     }
                 }
+                let mut player_vel_y_update = None;
+                let mut player2_vel_y_update = None;
                 for enemy in &mut self.enemies {
                     if !enemy.alive {
                         continue;
@@ -1892,22 +1917,28 @@ impl Game {
                     let (px, py, pw, ph) = self.player.get_rect();
                     match enemy.check_player_collision(px, py, pw, ph, self.player.vel_y) {
                         Some(true) => {
-                            self.audio.play_death();
-                            if self.lives > 0 {
-                                self.lives -= 1;
-                            }
-                            if self.lives == 0 {
-                                self.game_over_fade_timer = GAME_OVER_FADE_TIMER;
-                                self.state = GameState::GameOver;
-                            } else {
-                                self.respawn_timer_p1 = RESPAWN_TIMER;
-                            }
+                            self.handle_player_death_versus_p1();
                             break;
                         }
                         Some(false) => {
+                            let enemy_x = enemy.x;
+                            let enemy_y = enemy.y;
+                            let enemy_width = enemy.width;
+                            let enemy_height = enemy.height;
+                            player_vel_y_update = Some(JUMP_FORCE * JUMP_BOUNCE_MULTIPLIER);
                             self.audio.play_enemy_death();
                             self.score += SCORE_ENEMY;
-                            self.player.vel_y = JUMP_FORCE * JUMP_BOUNCE_MULTIPLIER;
+                            self.camera_shake.trigger_kill();
+                            for _ in 0..PARTICLE_COUNT {
+                                let angle = rand::gen_range(0.0, std::f32::consts::PI * 2.0);
+                                let speed = rand::gen_range(40.0, 100.0);
+                                self.particles.push(Particle::new(
+                                    enemy_x + enemy_width / 2.0,
+                                    enemy_y + enemy_height / 2.0,
+                                    angle.cos() * speed,
+                                    angle.sin() * speed,
+                                ));
+                            }
                         }
                         None => {}
                     }
@@ -1915,29 +1946,42 @@ impl Game {
                         let (px2, py2, pw2, ph2) = p2.get_rect();
                         match enemy.check_player_collision(px2, py2, pw2, ph2, p2.vel_y) {
                             Some(true) => {
-                                self.audio.play_death();
-                                if self.lives > 0 {
-                                    self.lives -= 1;
-                                }
-                                if self.lives == 0 {
-                                    self.game_over_fade_timer = GAME_OVER_FADE_TIMER;
-                                    self.state = GameState::GameOver;
-                                } else {
-                                    self.respawn_timer_p2 = RESPAWN_TIMER;
-                                }
+                                self.handle_player_death_versus_p2();
                                 break;
                             }
                             Some(false) => {
+                                let enemy_x = enemy.x;
+                                let enemy_y = enemy.y;
+                                let enemy_width = enemy.width;
+                                let enemy_height = enemy.height;
+                                player2_vel_y_update = Some(JUMP_FORCE * JUMP_BOUNCE_MULTIPLIER);
                                 self.audio.play_enemy_death();
                                 self.score += SCORE_ENEMY;
-                                if let Some(ref mut p2) = self.player2 {
-                                    p2.vel_y = JUMP_FORCE * JUMP_BOUNCE_MULTIPLIER;
+                                self.camera_shake.trigger_kill();
+                                for _ in 0..PARTICLE_COUNT {
+                                    let angle = rand::gen_range(0.0, std::f32::consts::PI * 2.0);
+                                    let speed = rand::gen_range(40.0, 100.0);
+                                    self.particles.push(Particle::new(
+                                        enemy_x + enemy_width / 2.0,
+                                        enemy_y + enemy_height / 2.0,
+                                        angle.cos() * speed,
+                                        angle.sin() * speed,
+                                    ));
                                 }
                             }
                             None => {}
                         }
                     }
                 }
+                if let Some(vel_y) = player_vel_y_update {
+                    self.player.vel_y = vel_y;
+                }
+                if let Some(vel_y) = player2_vel_y_update {
+                    if let Some(ref mut p2) = self.player2 {
+                        p2.vel_y = vel_y;
+                    }
+                }
+                let mut coins_to_collect = Vec::new();
                 for coin in &mut self.coins {
                     if coin.collected {
                         continue;
@@ -1945,18 +1989,17 @@ impl Game {
                     coin.update(effective_dt);
                     let (px, py, pw, ph) = self.player.get_rect();
                     if coin.check_collection(px, py, pw, ph) {
-                        self.coins_collected += 1;
-                        self.score += SCORE_COIN;
-                        self.audio.play_coin();
+                        coins_to_collect.push((coin.x, coin.y));
                     }
                     if let Some(ref p2) = self.player2 {
                         let (px2, py2, pw2, ph2) = p2.get_rect();
                         if coin.check_collection(px2, py2, pw2, ph2) {
-                            self.coins_collected += 1;
-                            self.score += SCORE_COIN;
-                            self.audio.play_coin();
+                            coins_to_collect.push((coin.x, coin.y));
                         }
                     }
+                }
+                for (coin_x, coin_y) in coins_to_collect {
+                    self.handle_coin_collection(coin_x, coin_y);
                 }
                 if (self.player.x > LEVEL_COMPLETE_X || self.coins_collected >= self.total_coins)
                     && (self.player2.is_none()
@@ -1977,7 +2020,7 @@ impl Game {
                         self.unlocked_levels[self.current_level] = true;
                     }
                     if let Err(e) = self.save_game(0) {
-                        let error_msg = format!("Erro ao salvar jogo: {}", e);
+                        let error_msg = format!("Error saving game: {}", e);
                         eprintln!("{}", error_msg);
                         self.show_error(error_msg);
                     }
@@ -1986,22 +2029,12 @@ impl Game {
                 if let Some(ref p2) = self.player2 {
                     let center_x = (self.player.x + p2.x) / 2.0;
                     let screen_w = screen_width();
-                    let shake = if self.camera_shake_timer > 0.0 {
-                        let random = ((get_time() * 1000.0) as u32 % 100) as f32 / 100.0;
-                        (random - 0.5) * self.camera_shake_intensity
-                    } else {
-                        0.0
-                    };
+                    let shake = self.camera_shake.get_offset();
                     self.camera.update(center_x, screen_w, shake);
                 } else {
                     let player_x = self.player.x;
                     let screen_w = screen_width();
-                    let shake = if self.camera_shake_timer > 0.0 {
-                        let random = ((get_time() * 1000.0) as u32 % 100) as f32 / 100.0;
-                        (random - 0.5) * self.camera_shake_intensity
-                    } else {
-                        0.0
-                    };
+                    let shake = self.camera_shake.get_offset();
                     self.camera.update(player_x, screen_w, shake);
                 }
             }
@@ -2009,12 +2042,14 @@ impl Game {
                 if is_key_pressed(KeyCode::Up) || is_key_pressed(KeyCode::W) {
                     if self.pause_selection > 0 {
                         self.pause_selection -= 1;
+                        self.pause_animation.trigger(self.pause_selection);
                         self.audio.play_menu_select();
                     }
                 }
                 if is_key_pressed(KeyCode::Down) || is_key_pressed(KeyCode::S) {
                     if self.pause_selection < 3 {
                         self.pause_selection += 1;
+                        self.pause_animation.trigger(self.pause_selection);
                         self.audio.play_menu_select();
                     }
                 }
@@ -2125,17 +2160,10 @@ impl Game {
         }
         self.player.draw(self.camera.x, self.camera.y);
         for particle in &self.particles {
-            if particle.4 > 0.0 {
-                let screen_x = particle.0 - self.camera.x;
-                let screen_y = particle.1 - self.camera.y;
-                let alpha = particle.4 / PARTICLE_LIFETIME;
-                let color = if self.colorblind_mode {
-                    Color::new(0.5, 0.5, 0.5, alpha)
-                } else {
-                    Color::new(1.0, 0.84, 0.0, alpha)
-                };
-                draw_circle(screen_x, screen_y, 3.0, color);
-            }
+            particle.draw(self.camera.x, self.camera.y, self.colorblind_mode);
+        }
+        for bounce in &self.coin_bounces {
+            bounce.draw(self.camera.x, self.camera.y, self.colorblind_mode);
         }
     }
     fn draw_level_hud(&self, include_time_label: bool) {
@@ -2267,6 +2295,7 @@ impl Game {
                         measure_text(option, None, MENU_OPTION_SIZE as u16, 1.0).width;
                     let x = screen_width() / 2.0 - option_width / 2.0;
                     let y = start_y + (i as f32 * MENU_OPTION_SPACING);
+                    let scale = self.menu_animation.get_scale(i);
                     let color = if i == self.menu_selection {
                         BLACK
                     } else {
@@ -2306,7 +2335,15 @@ impl Game {
                             Color::new(0.0, 0.0, 0.0, alpha * 0.5),
                         );
                     }
-                    draw_text(option, x, y, MENU_OPTION_SIZE, color);
+                    let scaled_size = MENU_OPTION_SIZE * scale;
+                    let scaled_width = measure_text(option, None, scaled_size as u16, 1.0).width;
+                    draw_text(
+                        option,
+                        x + (option_width - scaled_width) / 2.0,
+                        y - (scaled_size - MENU_OPTION_SIZE) / 2.0,
+                        scaled_size,
+                        color,
+                    );
                     if i == 0 && self.has_new_save {
                         let new_text = "NEW";
                         draw_text(new_text, x + option_width + 10.0, y, 20.0, RED);
@@ -3147,17 +3184,7 @@ impl Game {
             GameState::Playing => {
                 self.draw_level_world();
                 self.draw_level_hud(false);
-                if self.level_start_fade_timer > 0.0 {
-                    let fade_progress = self.level_start_fade_timer / 1.5;
-                    let fade_alpha = fade_progress.min(1.0);
-                    draw_rectangle(
-                        0.0,
-                        0.0,
-                        screen_width(),
-                        screen_height(),
-                        Color::new(0.0, 0.0, 0.0, fade_alpha),
-                    );
-                }
+                self.draw_level_start_fade();
             }
             GameState::Versus => {
                 let camera_x = self.camera.x;
@@ -3215,17 +3242,7 @@ impl Game {
                     16.0,
                     GRAY,
                 );
-                if self.level_start_fade_timer > 0.0 {
-                    let fade_progress = self.level_start_fade_timer / 1.5;
-                    let fade_alpha = fade_progress.min(1.0);
-                    draw_rectangle(
-                        0.0,
-                        0.0,
-                        screen_width(),
-                        screen_height(),
-                        Color::new(0.0, 0.0, 0.0, fade_alpha),
-                    );
-                }
+                self.draw_level_start_fade();
             }
             GameState::Coop => {
                 self.draw_level_world();
@@ -3249,17 +3266,7 @@ impl Game {
                     16.0,
                     GRAY,
                 );
-                if self.level_start_fade_timer > 0.0 {
-                    let fade_progress = self.level_start_fade_timer / LEVEL_START_FADE_TIMER;
-                    let fade_alpha = fade_progress.min(1.0);
-                    draw_rectangle(
-                        0.0,
-                        0.0,
-                        screen_width(),
-                        screen_height(),
-                        Color::new(0.0, 0.0, 0.0, fade_alpha),
-                    );
-                }
+                self.draw_level_start_fade();
             }
             GameState::VersusEnd => {
                 let title = "GAME OVER";
@@ -3469,6 +3476,7 @@ impl Game {
                         measure_text(option, None, MENU_OPTION_SIZE as u16, 1.0).width;
                     let x = screen_width() / 2.0 - option_width / 2.0;
                     let y = start_y + (i as f32 * MENU_OPTION_SPACING);
+                    let scale = self.pause_animation.get_scale(i);
                     let color = if i == self.pause_selection {
                         WHITE
                     } else {
@@ -3477,7 +3485,15 @@ impl Game {
                     if i == self.pause_selection {
                         draw_text(">", x - MENU_INDICATOR_OFFSET, y, MENU_OPTION_SIZE, WHITE);
                     }
-                    draw_text(option, x, y, MENU_OPTION_SIZE, color);
+                    let scaled_size = MENU_OPTION_SIZE * scale;
+                    let scaled_width = measure_text(option, None, scaled_size as u16, 1.0).width;
+                    draw_text(
+                        option,
+                        x + (option_width - scaled_width) / 2.0,
+                        y - (scaled_size - MENU_OPTION_SIZE) / 2.0,
+                        scaled_size,
+                        color,
+                    );
                 }
                 let instructions = "ARROWS/WASD: Navigate | ENTER: Select | P/ESC: Resume";
                 let inst_width =
@@ -3561,7 +3577,8 @@ impl Game {
                 } else {
                     1.0
                 };
-                let fade_alpha = fade_progress.min(1.0);
+                let eased_progress = fade_progress * fade_progress * (3.0 - 2.0 * fade_progress);
+                let fade_alpha = eased_progress.min(1.0);
                 draw_rectangle(
                     0.0,
                     0.0,

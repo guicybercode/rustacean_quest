@@ -92,9 +92,18 @@ pub const DIFFICULTY_INSANE: f32 = 0.5;
 
 pub const CAMERA_SHAKE_INTENSITY: f32 = 5.0;
 pub const CAMERA_SHAKE_DURATION: f32 = 0.2;
+pub const CAMERA_SHAKE_FOOTSTEP: f32 = 1.0;
+pub const CAMERA_SHAKE_JUMP: f32 = 2.0;
+pub const CAMERA_SHAKE_KILL: f32 = 8.0;
 
 pub const PARTICLE_COUNT: usize = 10;
 pub const PARTICLE_LIFETIME: f32 = 0.5;
+pub const PARTICLE_MIN_RADIUS: f32 = 2.0;
+pub const PARTICLE_MAX_RADIUS: f32 = 5.0;
+pub const COIN_BOUNCE_DURATION: f32 = 0.2;
+pub const COIN_BOUNCE_SCALE: f32 = 1.3;
+pub const MENU_BOUNCE_DURATION: f32 = 0.15;
+pub const MENU_BOUNCE_SCALE: f32 = 1.1;
 
 pub const FONT_SIZE_SMALL: f32 = 16.0;
 pub const FONT_SIZE_MEDIUM: f32 = 24.0;
