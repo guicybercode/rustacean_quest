@@ -15,6 +15,7 @@ mod draw;
 mod helpers;
 mod state;
 mod update;
+mod versus_layout;
 
 pub use state::*;
 pub struct Game {
@@ -70,6 +71,7 @@ pub struct Game {
     level_info_cache: Vec<(String, usize, Color)>,
     pause_selection: usize,
     came_from_pause: bool,
+    use_p2_skin: bool,
     player_sprite_texture_p1: Option<std::rc::Rc<Texture2D>>,
     player_sprite_texture_p2: Option<std::rc::Rc<Texture2D>>,
     enemy_textures: Vec<std::rc::Rc<Texture2D>>,
@@ -201,6 +203,7 @@ impl Game {
             level_info_cache: Self::init_level_info_cache(),
             pause_selection: 0,
             came_from_pause: false,
+            use_p2_skin: false,
             player_sprite_texture_p1,
             player_sprite_texture_p2,
             enemy_textures,

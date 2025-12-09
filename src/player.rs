@@ -68,14 +68,13 @@ impl Player {
     }
 
     pub fn update_animation(&mut self, dt: f32) {
-        const ANIMATION_SPEED: f32 = 0.08;
-        const MIN_VELOCITY_FOR_ANIMATION: f32 = 5.0;
-
-        if self.on_ground && self.vel_x.abs() > MIN_VELOCITY_FOR_ANIMATION {
+        const ANIMATION_SPEED: f32 = PLAYER_ANIMATION_SPEED;
+        let moving = self.vel_x.abs() > 1.0 || !self.on_ground;
+        if moving {
             self.animation_timer += dt;
             if self.animation_timer >= ANIMATION_SPEED {
                 self.animation_timer = 0.0;
-                self.animation_frame = (self.animation_frame + 1) % 4;
+                self.animation_frame = (self.animation_frame + 1) % PLAYER_FRAMES;
             }
         } else {
             self.animation_frame = 0;
@@ -158,10 +157,16 @@ impl Player {
         }
 
         if let Some(texture) = &self.sprite_texture_p1 {
-            let sprite_width = texture.width() / 4.0;
+            let sprite_width = texture.width() / PLAYER_FRAMES as f32;
             let sprite_height = texture.height();
 
-            let source_x = self.animation_frame as f32 * sprite_width;
+            let is_dead = self.on_ground == false && self.vel_y > TERMINAL_VELOCITY / 2.0;
+            let frame = if is_dead {
+                0usize
+            } else {
+                self.animation_frame
+            };
+            let source_x = frame as f32 * sprite_width;
 
             let source_rect = Rect::new(source_x, 0.0, sprite_width, sprite_height);
 
@@ -200,7 +205,7 @@ impl Player {
         };
 
         if let Some(texture) = texture_opt {
-            let sprite_width = texture.width() / 4.0;
+            let sprite_width = texture.width() / PLAYER_FRAMES as f32;
             let sprite_height = texture.height();
 
             let source_x = self.animation_frame as f32 * sprite_width;
@@ -220,6 +225,30 @@ impl Player {
         } else {
             let color = if is_player1 { BLACK } else { DARKGRAY };
             draw_rectangle(screen_x, screen_y, self.width, self.height, color);
+            draw_circle(screen_x + 10.0, screen_y + 10.0, 3.0, WHITE);
+            draw_circle(screen_x + 22.0, screen_y + 10.0, 3.0, WHITE);
+            draw_rectangle_lines(screen_x, screen_y, self.width, self.height, 2.0, WHITE);
+        }
+    }
+
+    pub fn draw_frame_at(&self, screen_x: f32, screen_y: f32, frame_idx: usize) {
+        let frame = frame_idx % PLAYER_FRAMES;
+        if let Some(texture) = &self.sprite_texture_p1 {
+            let sprite_width = texture.width() / PLAYER_FRAMES as f32;
+            let sprite_height = texture.height();
+            let source_x = frame as f32 * sprite_width;
+            let source_rect = Rect::new(source_x, 0.0, sprite_width, sprite_height);
+            let params = DrawTextureParams {
+                dest_size: Some(vec2(self.width, self.height)),
+                source: Some(source_rect),
+                rotation: 0.0,
+                flip_x: false,
+                flip_y: false,
+                pivot: None,
+            };
+            draw_texture_ex(&**texture, screen_x, screen_y, WHITE, params);
+        } else {
+            draw_rectangle(screen_x, screen_y, self.width, self.height, BLACK);
             draw_circle(screen_x + 10.0, screen_y + 10.0, 3.0, WHITE);
             draw_circle(screen_x + 22.0, screen_y + 10.0, 3.0, WHITE);
             draw_rectangle_lines(screen_x, screen_y, self.width, self.height, 2.0, WHITE);

@@ -94,9 +94,18 @@ impl Game {
         };
         self.last_checkpoint_pos = save_data.last_checkpoint_pos;
         self.player_name = save_data.player_name;
+        self.use_p2_skin = self.player_name.to_lowercase() == "guicybercode";
         self.tutorial_completed = save_data.tutorial_completed;
         self.versus_played = save_data.versus_played;
         Ok(())
+    }
+
+    pub fn apply_skin(&self, player: &mut Player) {
+        if self.use_p2_skin {
+            if let Some(tex) = &self.player_sprite_texture_p2 {
+                player.sprite_texture_p1 = Some(std::rc::Rc::clone(tex));
+            }
+        }
     }
 
     pub fn is_easter_egg(&self) -> bool {
@@ -424,6 +433,7 @@ impl Game {
         );
         player.on_ground = true;
         player.vel_y = 0.0;
+        self.apply_skin(&mut player);
         self.player = player;
         self.enemies = enemies;
         self.platforms = platforms;
@@ -450,23 +460,23 @@ impl Game {
 
     pub fn load_versus_map(&mut self) {
         use crate::camera::Camera;
+        use crate::game::versus_layout::VersusLayout;
 
-        let mut platforms = Vec::with_capacity(ESTIMATED_PLATFORMS_PER_LEVEL);
-        let screen_w = SCREEN_WIDTH as f32;
-        platforms.push(Platform::new(0.0, GROUND_Y, screen_w, 50.0));
-        platforms.push(Platform::new(100.0, 450.0, 150.0, 20.0));
-        platforms.push(Platform::new(screen_w - 250.0, 450.0, 150.0, 20.0));
-        platforms.push(Platform::new(200.0, 350.0, 120.0, 20.0));
-        platforms.push(Platform::new(screen_w - 320.0, 350.0, 120.0, 20.0));
-        platforms.push(Platform::new(150.0, 250.0, 100.0, 20.0));
-        platforms.push(Platform::new(screen_w - 250.0, 250.0, 100.0, 20.0));
-        platforms.push(Platform::new(screen_w / 2.0 - 50.0, 400.0, 100.0, 20.0));
-        platforms.push(Platform::new(50.0, 500.0, 40.0, 50.0));
-        platforms.push(Platform::new(screen_w - 90.0, 500.0, 40.0, 50.0));
-        self.versus_platforms = platforms;
-        self.player = Player::new(
-            100.0,
-            GROUND_Y - PLAYER_HEIGHT,
+        let layout = VersusLayout::balanced_default();
+        let map_width = layout
+            .platforms
+            .iter()
+            .map(|p| p.x + p.width)
+            .fold(SCREEN_WIDTH as f32, f32::max);
+        let center_x = map_width / 2.0;
+        let spawn_offset = 140.0;
+        let spawn_y = GROUND_Y - PLAYER_HEIGHT;
+
+        self.versus_platforms = layout.platforms;
+        self.level_start_fade_timer = LEVEL_START_FADE_TIMER;
+        let mut player = Player::new(
+            center_x - spawn_offset,
+            spawn_y,
             self.player_sprite_texture_p1
                 .as_ref()
                 .map(|t| std::rc::Rc::clone(t)),
@@ -474,12 +484,13 @@ impl Game {
                 .as_ref()
                 .map(|t| std::rc::Rc::clone(t)),
         );
+        self.apply_skin(&mut player);
+        self.player = player;
         self.player.on_ground = true;
         self.player.vel_y = 0.0;
-        self.player.y = GROUND_Y - PLAYER_HEIGHT;
         self.player2 = Some(Player::new(
-            screen_w - 100.0 - PLAYER_WIDTH,
-            GROUND_Y - PLAYER_HEIGHT,
+            center_x + spawn_offset - PLAYER_WIDTH,
+            spawn_y,
             self.player_sprite_texture_p1
                 .as_ref()
                 .map(|t| std::rc::Rc::clone(t)),
@@ -490,7 +501,6 @@ impl Game {
         if let Some(ref mut p2) = self.player2 {
             p2.on_ground = true;
             p2.vel_y = 0.0;
-            p2.y = GROUND_Y - PLAYER_HEIGHT;
         }
         self.player1_score = 0;
         self.player2_score = 0;

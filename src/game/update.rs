@@ -145,9 +145,11 @@ impl Game {
                     let (is_valid, _) = name_filter::is_name_valid(&self.name_input);
                     if is_valid {
                         self.player_name = self.name_input.clone();
-                        if self.player_name.to_lowercase() == "guicybercode" {
+                        let is_egg = self.player_name.to_lowercase() == "guicybercode";
+                        if is_egg {
                             self.lives = EASTER_EGG_LIVES;
                         }
+                        self.use_p2_skin = is_egg;
                         self.state = GameState::LevelSelect;
                         self.level_selection = 0;
                     }
@@ -542,8 +544,7 @@ impl Game {
                             self.load_level(self.level_selection + 1, false, None, None);
                             self.score = 0;
                             if matches!(self.state, GameState::LevelSelect) {
-                                let coming_from_coop = self.menu_selection == 2;
-                                if coming_from_coop {
+                                if self.menu_selection == 2 {
                                     self.player2 = Some(Player::new(
                                         150.0,
                                         GROUND_Y - PLAYER_HEIGHT,
@@ -749,6 +750,9 @@ impl Game {
                     self.player2 = None;
                     return;
                 }
+                if self.level_start_fade_timer > 0.0 {
+                    self.level_start_fade_timer -= dt;
+                }
                 let effective_dt = if self.assist_mode {
                     dt * ASSIST_MODE_SLOW_MOTION
                 } else {
@@ -764,8 +768,15 @@ impl Game {
                 if self.respawn_timer_p1 > 0.0 {
                     self.respawn_timer_p1 -= dt;
                     if self.respawn_timer_p1 <= 0.0 {
+                        let map_width = self
+                            .versus_platforms
+                            .iter()
+                            .map(|plat| plat.x + plat.width)
+                            .fold(SCREEN_WIDTH as f32, f32::max);
+                        let center_x = map_width / 2.0;
+                        let offset = 140.0;
                         self.player = Player::new(
-                            100.0,
+                            center_x - offset,
                             GROUND_Y - PLAYER_HEIGHT,
                             self.player_sprite_texture_p1
                                 .as_ref()
@@ -776,15 +787,21 @@ impl Game {
                         );
                         self.player.on_ground = true;
                         self.player.vel_y = 0.0;
-                        self.player.y = GROUND_Y - PLAYER_HEIGHT;
                     }
                 }
                 if self.respawn_timer_p2 > 0.0 {
                     self.respawn_timer_p2 -= dt;
                     if let Some(ref mut p2) = self.player2 {
                         if self.respawn_timer_p2 <= 0.0 {
+                            let map_width = self
+                                .versus_platforms
+                                .iter()
+                                .map(|plat| plat.x + plat.width)
+                                .fold(SCREEN_WIDTH as f32, f32::max);
+                            let center_x = map_width / 2.0;
+                            let offset = 140.0;
                             *p2 = Player::new(
-                                700.0,
+                                center_x + offset - PLAYER_WIDTH,
                                 GROUND_Y - PLAYER_HEIGHT,
                                 self.player_sprite_texture_p1
                                     .as_ref()
@@ -795,7 +812,6 @@ impl Game {
                             );
                             p2.on_ground = true;
                             p2.vel_y = 0.0;
-                            p2.y = GROUND_Y - PLAYER_HEIGHT;
                         }
                     }
                 }
@@ -934,7 +950,23 @@ impl Game {
                     let center_x = (self.player.x + p2.x) / 2.0;
                     let screen_width = screen_width();
                     let shake = self.camera_shake.get_offset();
-                    self.camera.update(center_x, screen_width, shake);
+                    let map_width = self
+                        .versus_platforms
+                        .iter()
+                        .map(|plat| plat.x + plat.width)
+                        .fold(screen_width, f32::max);
+                    let target = center_x - screen_width / 2.0 + shake;
+                    self.camera.x = target.clamp(0.0, (map_width - screen_width).max(0.0));
+                } else {
+                    let screen_width = screen_width();
+                    let shake = self.camera_shake.get_offset();
+                    let map_width = self
+                        .versus_platforms
+                        .iter()
+                        .map(|plat| plat.x + plat.width)
+                        .fold(screen_width, f32::max);
+                    let target = self.player.x - screen_width / 2.0 + shake;
+                    self.camera.x = target.clamp(0.0, (map_width - screen_width).max(0.0));
                 }
             }
             GameState::VersusEnd => {

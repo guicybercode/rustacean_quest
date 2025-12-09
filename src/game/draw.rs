@@ -1404,34 +1404,9 @@ impl Game {
                     screen_height(),
                     Color::new(0.0, 0.0, 0.0, bg_alpha),
                 );
-                let player_size = 64.0;
-                let player_x = screen_width() / 2.0 - player_size / 2.0;
-                let player_y = screen_height() / 2.0 - player_size / 2.0 - 50.0;
-                let player_alpha = (1.0 - progress * 1.5).max(0.0);
-                let player_color = Color::new(0.0, 0.0, 0.0, player_alpha);
-                draw_rectangle(player_x, player_y, player_size, player_size, player_color);
-                draw_rectangle_lines(
-                    player_x,
-                    player_y,
-                    player_size,
-                    player_size,
-                    2.0,
-                    Color::new(1.0, 1.0, 1.0, player_alpha),
-                );
-                let eye_size = 6.0;
-                let eye_y = player_y + 20.0;
-                draw_circle(
-                    player_x + 20.0,
-                    eye_y,
-                    eye_size,
-                    Color::new(1.0, 1.0, 1.0, player_alpha),
-                );
-                draw_circle(
-                    player_x + 44.0,
-                    eye_y,
-                    eye_size,
-                    Color::new(1.0, 1.0, 1.0, player_alpha),
-                );
+                let player_x = screen_width() / 2.0 - PLAYER_WIDTH / 2.0;
+                let player_y = screen_height() / 2.0 - PLAYER_HEIGHT / 2.0 - 50.0;
+                self.player.draw_frame_at(player_x, player_y, 1);
                 let lives_text = format!("Lives: {}", self.lives);
                 let lives_size = 48.0;
                 let lives_width = measure_text(&lives_text, None, lives_size as u16, 1.0).width;
@@ -1472,6 +1447,11 @@ impl Game {
                     screen_height(),
                     Color::new(0.0, 0.0, 0.0, fade_alpha),
                 );
+                if fade_alpha >= 0.6 {
+                    let player_x = screen_width() / 2.0 - PLAYER_WIDTH / 2.0;
+                    let player_y = screen_height() / 2.0 - PLAYER_HEIGHT / 2.0 - 150.0;
+                    self.player.draw_frame_at(player_x, player_y, 1);
+                }
                 if fade_alpha >= 1.0 {
                     let text = "GAME OVER";
                     let text_size = 60.0;

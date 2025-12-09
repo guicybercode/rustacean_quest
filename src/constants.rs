@@ -3,7 +3,7 @@ pub const ENEMY_GRAVITY: f32 = 400.0;
 pub const TERMINAL_VELOCITY: f32 = 500.0;
 
 pub const PLAYER_SPEED: f32 = 200.0;
-pub const JUMP_FORCE: f32 = -400.0;
+pub const JUMP_FORCE: f32 = -470.0;
 pub const PLAYER_WIDTH: f32 = 64.0;
 pub const PLAYER_HEIGHT: f32 = 64.0;
 pub const PLAYER_FRICTION: f32 = 0.85;
@@ -11,6 +11,8 @@ pub const PLAYER_FRICTION: f32 = 0.85;
 pub const ENEMY_SPEED: f32 = 50.0;
 pub const ENEMY_WIDTH: f32 = 24.0;
 pub const ENEMY_HEIGHT: f32 = 24.0;
+pub const PLAYER_FRAMES: usize = 4;
+pub const ENEMY_FRAMES: usize = 4;
 
 pub const COIN_SIZE: f32 = 16.0;
 pub const COIN_ROTATION_SPEED: f32 = 3.0;

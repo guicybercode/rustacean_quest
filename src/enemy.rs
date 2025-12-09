@@ -56,11 +56,11 @@ impl Enemy {
 
         self.facing_right = self.vel_x >= 0.0;
 
-        if self.texture.is_some() && self.on_ground {
+        if self.texture.is_some() {
             self.anim_timer += dt;
             if self.anim_timer >= crate::constants::ENEMY_ANIMATION_SPEED {
                 self.anim_timer = 0.0;
-                self.anim_frame = (self.anim_frame + 1) % 4;
+                self.anim_frame = (self.anim_frame + 1) % crate::constants::ENEMY_FRAMES;
             }
         } else {
             self.anim_frame = 0;
@@ -205,7 +205,7 @@ impl Enemy {
         let screen_y = self.y - camera_y;
 
         if let Some(tex) = &self.texture {
-            let frame_w = tex.width() / 4.0;
+            let frame_w = tex.width() / crate::constants::ENEMY_FRAMES as f32;
             let frame_h = tex.height();
             let source_x = self.anim_frame as f32 * frame_w;
             let source = Rect::new(source_x, 0.0, frame_w, frame_h);
