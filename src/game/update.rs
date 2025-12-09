@@ -173,26 +173,18 @@ impl Game {
                         }
                     }
                     if is_key_pressed(KeyCode::Enter) {
-                        match SaveData::get_save_path(self.continue_selection) {
-                            Ok(path) => {
-                                if SaveData::save_exists(&path) {
-                                    if let Err(e) = self.load_game(self.continue_selection) {
-                                        let error_msg = format!("Error loading save: {}", e);
-                                        eprintln!("{}", error_msg);
-                                        self.show_error(error_msg);
-                                    } else {
-                                        self.load_level(
-                                            self.current_level,
-                                            self.last_checkpoint_pos.is_some(),
-                                            Some(self.time_remaining),
-                                            Some(self.coins_collected),
-                                        );
-                                        self.start_transition(GameState::Playing);
-                                    }
-                                }
+                        match self.load_game(self.continue_selection) {
+                            Ok(_) => {
+                                self.load_level(
+                                    self.current_level,
+                                    self.last_checkpoint_pos.is_some(),
+                                    Some(self.time_remaining),
+                                    Some(self.coins_collected),
+                                );
+                                self.start_transition(GameState::Playing);
                             }
                             Err(e) => {
-                                let error_msg = format!("Error resolving save path: {}", e);
+                                let error_msg = format!("Error loading save: {}", e);
                                 eprintln!("{}", error_msg);
                                 self.show_error(error_msg);
                             }
@@ -201,7 +193,9 @@ impl Game {
                     if is_key_pressed(KeyCode::Delete) || is_key_pressed(KeyCode::Backspace) {
                         match SaveData::get_save_path(self.continue_selection) {
                             Ok(path) => {
-                                if SaveData::save_exists(&path) {
+                                if SaveData::save_exists(&path)
+                                    || SaveData::legacy_exists(self.continue_selection)
+                                {
                                     self.continue_mode = ContinueMode::DeleteConfirm;
                                 }
                             }

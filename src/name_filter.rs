@@ -33,6 +33,7 @@ const BLOCKED_WORDS: &[&str] = &[
 ];
 
 pub fn is_name_valid(name: &str) -> (bool, Option<String>) {
+    let normalized = normalize(name);
     if name.len() < MIN_NAME_LENGTH {
         return (
             false,
@@ -64,9 +65,9 @@ pub fn is_name_valid(name: &str) -> (bool, Option<String>) {
         }
     }
 
-    let name_lower = name.to_lowercase();
+    let name_lower = normalized.to_lowercase();
     for blocked_word in BLOCKED_WORDS {
-        if name_lower.contains(blocked_word) {
+        if name_lower.contains(&normalize(blocked_word)) {
             return (
                 false,
                 Some("Name contains inappropriate content".to_string()),
@@ -75,4 +76,44 @@ pub fn is_name_valid(name: &str) -> (bool, Option<String>) {
     }
 
     (true, None)
+}
+
+fn normalize(input: &str) -> String {
+    use unicode_normalization::{char::is_combining_mark, UnicodeNormalization};
+    input
+        .nfd()
+        .filter(|c| !is_combining_mark(*c))
+        .collect::<String>()
+        .to_lowercase()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rejects_short() {
+        let (ok, msg) = is_name_valid("ab");
+        assert!(!ok);
+        assert!(msg.unwrap().contains("at least"));
+    }
+
+    #[test]
+    fn rejects_blocked_normalized() {
+        let (ok, _) = is_name_valid("ÁsS_clã");
+        assert!(!ok, "normalized blocked word should be rejected");
+    }
+
+    #[test]
+    fn accepts_valid_with_accents() {
+        let (ok, msg) = is_name_valid("João-Pedro_123");
+        assert!(ok, "should accept accented and allowed symbols: {:?}", msg);
+    }
+
+    #[test]
+    fn rejects_bad_chars() {
+        let (ok, msg) = is_name_valid("abc$");
+        assert!(!ok);
+        assert!(msg.unwrap().contains("only contain"));
+    }
 }

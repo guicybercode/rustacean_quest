@@ -75,8 +75,7 @@ impl Game {
     }
 
     pub fn load_game(&mut self, slot: usize) -> Result<(), String> {
-        let path = SaveData::get_save_path(slot)?;
-        let save_data = SaveData::load_from_file(&path)?;
+        let save_data = SaveData::load_slot(slot)?;
         self.current_level = save_data.current_level;
         self.unlocked_levels = save_data.unlocked_levels;
         self.lives = save_data.lives;
